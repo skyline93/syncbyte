@@ -10,7 +10,7 @@ import (
 type DBResource struct {
 	gorm.Model
 	Name     string
-	DBType   types.DBType
+	DBType   string
 	Version  string
 	Server   string
 	Port     int
@@ -27,7 +27,7 @@ type S3Backend struct {
 	SecretKey   string
 	Bucket      string
 	StorageType string
-	DataType    types.BackendDataType
+	DataType    string
 }
 
 type BackupPolicy struct {
@@ -50,7 +50,7 @@ type BackupJob struct {
 	gorm.Model
 	StartTime  time.Time
 	EndTime    time.Time
-	Status     types.JobStatus
+	Status     string
 	ResourceID uint
 	BackendID  uint
 	PolicyID   uint
@@ -73,14 +73,14 @@ type RestoreJob struct {
 	gorm.Model
 	StartTime   time.Time
 	EndTime     time.Time
-	Status      types.JobStatus
+	Status      string
 	BackupSetID uint
 }
 
 type RestoreDBResource struct {
 	gorm.Model
 	Name         string
-	DBType       types.DBType
+	DBType       string
 	Version      string
 	Server       string
 	Port         int

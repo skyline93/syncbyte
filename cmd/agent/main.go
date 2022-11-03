@@ -21,19 +21,25 @@ var cmdRun = &cobra.Command{
 	Use:   "run",
 	Short: "run server of syncbyte-agent",
 	Run: func(cmd *cobra.Command, args []string) {
-		srv := agent.New()
-		if err := srv.Run(); err != nil {
-			fmt.Printf("run error: %v", err)
-			os.Exit(1)
+		if err := agent.RunServer(fmt.Sprintf("%s:%d", options.Host, options.Port)); err != nil {
+			fmt.Printf("run server failed, err: %v", err)
 		}
 	},
 }
 
-func init() {
-	cobra.OnInitialize(agent.InitConfig)
-	cmdRoot.PersistentFlags().StringVarP(&agent.CfgFile, "config", "c", "", "config file (default is $HOME/.syncbyte-agent.yaml)")
+type Options struct {
+	Host string
+	Port int
+}
 
+var options Options
+
+func init() {
 	cmdRoot.AddCommand(cmdRun)
+
+	f := cmdRun.PersistentFlags()
+	f.StringVarP(&options.Host, "host", "H", "127.0.0.1", "server host")
+	f.IntVarP(&options.Port, "port", "p", 50051, "server port")
 }
 
 func Execute() {

@@ -1,52 +1,6 @@
 package types
 
-import (
-	"time"
-)
-
-type DBType string
-
-const (
-	PostgreSQL DBType = "postgresql"
-	MySQL      DBType = "mysql"
-	SQLite     DBType = "sqlite"
-)
-
-type JobStatus string
-
-const (
-	Queued    JobStatus = "queued"
-	Running   JobStatus = "running"
-	Successed JobStatus = "successed"
-	Failed    JobStatus = "failed"
-)
-
-type ScheduledJobType string
-
-const (
-	Backup ScheduledJobType = "backup"
-)
-
-type BackendDataType string
-
-const (
-	PGDATA BackendDataType = "pg_data"
-)
-
-type DataTypeMapping map[DBType]BackendDataType
-
-var BackendDataTypeMapping = DataTypeMapping{
-	PostgreSQL: PGDATA,
-}
-
-type SystemReSourceType string
-
-const (
-	Backend SystemReSourceType = "backend"
-	Source  SystemReSourceType = "source"
-	Restore SystemReSourceType = "restore"
-	Agent   SystemReSourceType = "agent"
-)
+import "time"
 
 const TimeFormat = "15:04:05"
 

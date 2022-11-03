@@ -4,12 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/skyline93/syncbyte-go/internal/engine/options"
-	"github.com/skyline93/syncbyte-go/internal/engine/policy"
+	"github.com/skyline93/syncbyte-go/internal/engine/backup"
+	"github.com/skyline93/syncbyte-go/internal/engine/config"
 	"github.com/skyline93/syncbyte-go/internal/engine/repository"
-	"github.com/skyline93/syncbyte-go/internal/engine/scheduler"
-	"github.com/skyline93/syncbyte-go/internal/engine/webapi"
-	"github.com/skyline93/syncbyte-go/internal/pkg/worker"
 	"github.com/spf13/cobra"
 )
 
@@ -22,31 +19,38 @@ var cmdRoot = &cobra.Command{
 	},
 }
 
-var cmdRun = &cobra.Command{
-	Use:   "run",
-	Short: "run server of syncbyte-engine",
+var cmdBackup = &cobra.Command{
+	Use:   "backup",
+	Short: "backup",
 	Run: func(cmd *cobra.Command, args []string) {
-		srv := webapi.New()
-
-		if err := srv.Run(); err != nil {
-			fmt.Printf("run error: %v", err)
-			os.Exit(1)
+		if err := backup.Backup(options.SourcePath, options.MountPoint); err != nil {
+			fmt.Printf("backup failed, err: %v", err)
 		}
 	},
 }
 
-func init() {
-	cobra.OnInitialize(
-		options.InitConfig,
-		repository.InitDB,
-		scheduler.InitScheduler,
-		policy.LoadSchedulers,
-		worker.InitWorkPool,
-		scheduler.DoScheduledJob,
-	)
-	cmdRoot.PersistentFlags().StringVarP(&options.CfgFile, "config", "c", "", "config file (default is $HOME/.syncbyte-engine.yaml)")
+type Options struct {
+	Host string
+	Port int
 
-	cmdRoot.AddCommand(cmdRun)
+	SourcePath string
+	MountPoint string
+}
+
+var options Options
+
+func init() {
+	cobra.OnInitialize(config.InitConfig, repository.InitRepository)
+	cmdRoot.AddCommand(cmdBackup)
+
+	f := cmdBackup.Flags()
+	f.StringVarP(&options.Host, "host", "H", "127.0.0.1", "server host")
+	f.IntVarP(&options.Port, "port", "p", 50051, "server port")
+	f.StringVarP(&options.SourcePath, "source", "s", "", "source path")
+	f.StringVarP(&options.MountPoint, "dest", "d", "", "dest path")
+
+	cmdBackup.MarkFlagRequired("source")
+	cmdBackup.MarkFlagRequired("dest")
 }
 
 func Execute() {

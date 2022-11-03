@@ -2,138 +2,80 @@ package agent
 
 import (
 	"context"
-	"io"
-	"log"
 	"net"
-	"os"
-	"path"
-	"time"
 
-	"github.com/pkg/errors"
-	"github.com/skyline93/syncbyte-go/internal/agent/backend"
-	"github.com/skyline93/syncbyte-go/internal/agent/dest"
-	"github.com/skyline93/syncbyte-go/internal/agent/source"
-	"github.com/skyline93/syncbyte-go/internal/pkg/types"
-	pb "github.com/skyline93/syncbyte-go/internal/proto"
-	"github.com/skyline93/syncbyte-go/pkg/cache"
+	"github.com/skyline93/syncbyte-go/pkg/logging"
 	"google.golang.org/grpc"
+
+	pb "github.com/skyline93/syncbyte-go/internal/proto"
 )
 
-var Cache = *cache.New(4096, time.Second*60*60*6, time.Second*60)
+var logger = logging.GetSugaredLogger("backup")
 
-type RPCServer struct {
-	pb.UnimplementedAgentServer
+type syncbyteServer struct {
+	pb.UnimplementedSyncbyteServer
 }
 
-func New() *RPCServer {
-	return &RPCServer{}
-}
+func (s *syncbyteServer) Backup(req *pb.BackupRequest, stream pb.Syncbyte_BackupServer) error {
+	ctx := context.TODO()
+	nas := NewNasVolume(req.DataStoreParams.MountPoint)
+	mgmt := NewBackupManager(nas, ctx)
 
-func (s *RPCServer) StartBackup(ctx context.Context, in *pb.BackupRequest) (*pb.BackupResponse, error) {
-	var (
-		src source.Source
-		bak backend.Backend
-	)
+	fiChan := make(chan FileInfo)
 
-	srcOpts := in.SourceOpts
-	bakOpts := in.BackendOpts
+	go mgmt.Backup(req.BackupParams.SourcePath, fiChan)
 
-	if in.SourceOpts.Dbtype == string(types.PostgreSQL) {
-		src = source.NewPostgreSQL(&source.Options{
-			Name:     srcOpts.Name,
-			Server:   srcOpts.Server,
-			User:     srcOpts.User,
-			Password: srcOpts.Password,
-			DBName:   srcOpts.Dbname,
-			Version:  srcOpts.Version,
-			DBType:   types.DBType(srcOpts.Dbtype),
-			Port:     int(srcOpts.Port),
-		})
+	for fi := range fiChan {
+		var infos []*pb.PartInfo
 
-		bak = backend.NewS3(&backend.Options{
-			EndPoint:  bakOpts.Endpoint,
-			AccessKey: bakOpts.Accesskey,
-			SecretKey: bakOpts.Secretkey,
-			Bucket:    bakOpts.Bucket,
-		})
-	}
+		for _, i := range fi.PartInfos {
+			info := &pb.PartInfo{
+				Index: int32(i.Index),
+				MD5:   i.MD5,
+				Size:  i.Size,
+			}
 
-	job, err := NewBackupJob(src, bak, Opts.Backup.MountPoint, in.Datasetname, in.Iscompress)
-	if err != nil {
-		return nil, err
-	}
+			infos = append(infos, info)
+		}
 
-	go job.Run()
-
-	return &pb.BackupResponse{Jobid: job.JobID}, nil
-}
-
-func (s *RPCServer) StartRestore(ctx context.Context, in *pb.RestoreRequest) (*pb.RestoreResponse, error) {
-	var (
-		d   dest.Dest
-		bak backend.Backend
-	)
-
-	destOpts := in.DestOpts
-	bakOpts := in.BackendOpts
-
-	if in.DestOpts.Dbtype == string(types.PostgreSQL) {
-		d = dest.NewPostgreSQL(&dest.Options{
-			Name:     destOpts.Name,
-			Server:   destOpts.Server,
-			User:     destOpts.User,
-			Password: destOpts.Password,
-			DBName:   destOpts.Dbname,
-			Version:  destOpts.Version,
-			DBType:   types.DBType(destOpts.Dbtype),
-			Port:     int(destOpts.Port),
-		})
-
-		bak = backend.NewS3(&backend.Options{
-			EndPoint:  bakOpts.Endpoint,
-			AccessKey: bakOpts.Accesskey,
-			SecretKey: bakOpts.Secretkey,
-			Bucket:    bakOpts.Bucket,
-		})
-	}
-
-	job, err := NewRestoreJob(d, bak, Opts.Restore.MountPoint, in.Datasetname, in.Isuncompress)
-	if err != nil {
-		return nil, err
-	}
-
-	go job.Run()
-
-	return &pb.RestoreResponse{Jobid: job.JobID}, nil
-}
-
-func (s *RPCServer) GetJobStatus(ctx context.Context, in *pb.GetJobRequest) (*pb.GetJobResponse, error) {
-	log.Printf("get job status, job_id: %v", in.Jobid)
-	v := Cache.Get(in.Jobid)
-	jobInfo := v.(JobInfo)
-
-	return &pb.GetJobResponse{Status: string(jobInfo.Status)}, nil
-}
-
-func (s *RPCServer) Run() error {
-	logFile, err := os.OpenFile(path.Join(Opts.LogPath, "agent.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0664)
-	if err != nil {
-		return err
-	}
-	log.SetOutput(io.MultiWriter(logFile, os.Stdout))
-
-	lis, err := net.Listen("tcp", Opts.ListenAddr)
-	if err != nil {
-		return errors.Wrapf(err, "listen failed, addr: %s", Opts.ListenAddr)
-	}
-
-	r := grpc.NewServer()
-	pb.RegisterAgentServer(r, s)
-
-	log.Printf("server listening at %v", lis.Addr())
-	if err := r.Serve(lis); err != nil {
-		return errors.Wrap(err, "serve error")
+		if err := stream.Send(&pb.BackupResponse{
+			Name:       fi.Name,
+			Path:       fi.Path,
+			Size:       fi.Size,
+			MD5:        fi.MD5,
+			GID:        fi.GID,
+			UID:        fi.UID,
+			Device:     fi.Device,
+			DeviceID:   fi.DeviceID,
+			BlockSize:  fi.BlockSize,
+			Blocks:     fi.Blocks,
+			AccessTime: fi.AccessTime,
+			ModTime:    fi.ModTime,
+			ChangeTime: fi.ChangeTime,
+			PartInfos:  infos,
+		}); err != nil {
+			return err
+		}
 	}
 
 	return nil
+}
+
+func newServer() *syncbyteServer {
+	return &syncbyteServer{}
+}
+
+func RunServer(address string) error {
+	lis, err := net.Listen("tcp", address)
+	if err != nil {
+		logger.Errorf("run server failed, err: %v", err)
+		return err
+	}
+
+	logger.Infof("listen at %s", address)
+
+	grpcServer := grpc.NewServer()
+	pb.RegisterSyncbyteServer(grpcServer, newServer())
+
+	return grpcServer.Serve(lis)
 }
