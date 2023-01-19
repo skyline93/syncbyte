@@ -94,23 +94,14 @@ func UploadBigFile(filename string, callback func(string, []byte) error, fileInf
 		partIndex += 1
 	}
 
-	s := fi.Sys().(*syscall.Stat_t)
-
 	fileInfo.Name = fi.Name()
 	fileInfo.Size = fi.Size()
-	fileInfo.GID = s.Uid
-	fileInfo.UID = s.Uid
-	fileInfo.Device = s.Rdev
-	fileInfo.DeviceID = s.Dev
-	fileInfo.BlockSize = int64(s.Blksize)
-	fileInfo.Blocks = s.Blocks
-	fileInfo.AccessTime = s.Atim.Nano()
-	fileInfo.ModTime = s.Mtim.Nano()
-	fileInfo.ChangeTime = s.Ctim.Nano()
-
 	fileInfo.Path = filename
 	fileInfo.MD5 = fhReader.Hash()
 	fileInfo.PartInfos = partInfos
+
+	s := fi.Sys().(*syscall.Stat_t)
+	ExtendedFileInfo(fileInfo, s)
 
 	return nil
 }
@@ -150,22 +141,13 @@ func UploadSmallFile(filename string, callback func(string, []byte) error, fileI
 		return err
 	}
 
-	s := fi.Sys().(*syscall.Stat_t)
-
 	fileInfo.Name = fi.Name()
 	fileInfo.Size = fi.Size()
-	fileInfo.GID = s.Uid
-	fileInfo.UID = s.Uid
-	fileInfo.Device = s.Rdev
-	fileInfo.DeviceID = s.Dev
-	fileInfo.BlockSize = int64(s.Blksize)
-	fileInfo.Blocks = s.Blocks
-	fileInfo.AccessTime = s.Atim.Nano()
-	fileInfo.ModTime = s.Mtim.Nano()
-	fileInfo.ChangeTime = s.Ctim.Nano()
-
 	fileInfo.Path = filename
 	fileInfo.MD5 = hReader.Hash()
+
+	s := fi.Sys().(*syscall.Stat_t)
+	ExtendedFileInfo(fileInfo, s)
 
 	return nil
 }
