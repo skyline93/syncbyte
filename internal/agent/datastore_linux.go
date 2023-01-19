@@ -3,6 +3,8 @@
 
 package agent
 
+import "syscall"
+
 func ExtendedFileInfo(fi *FileInfo, s *syscall.Stat_t) {
 	fi.GID = s.Uid
 	fi.UID = s.Uid
