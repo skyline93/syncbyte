@@ -12,7 +12,7 @@ import (
 
 var logger = logging.GetSugaredLogger("backup")
 
-func Backup(sourcePath, mountPoint string) error {
+func Backup(sourcePath string) error {
 	mongoClient, err := mongodb.NewClient(config.Conf.MongodbUri)
 	if err != nil {
 		panic(err)
@@ -24,7 +24,7 @@ func Backup(sourcePath, mountPoint string) error {
 	ctx, cancel := context.WithCancel(context.TODO())
 	defer cancel()
 
-	go grpc.Backup(fiChan, sourcePath, mountPoint, ctx)
+	go grpc.Backup(fiChan, sourcePath, ctx)
 
 	col := mongoClient.GetCollection("backup01")
 

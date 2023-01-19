@@ -8,17 +8,14 @@ import (
 	pb "github.com/skyline93/syncbyte-go/internal/proto"
 )
 
-func Backup(fiChan chan schema.FileInfo, sourcePath, mountPoint string, ctx context.Context) error {
+func Backup(fiChan chan schema.FileInfo, sourcePath string, ctx context.Context) error {
 	client, err := NewClient(ctx)
 	if err != nil {
 		return err
 	}
 	defer client.Close()
 
-	req := pb.BackupRequest{
-		BackupParams:    &pb.BackupParams{SourcePath: sourcePath},
-		DataStoreParams: &pb.DataStoreParams{MountPoint: mountPoint},
-	}
+	req := pb.BackupRequest{SourcePath: sourcePath}
 
 	stream, err := client.c.Backup(ctx, &req)
 	if err != nil {

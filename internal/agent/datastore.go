@@ -160,8 +160,8 @@ type NasVolume struct {
 	MountPoint string
 }
 
-func NewNasVolume(mountPoint string) *NasVolume {
-	return &NasVolume{MountPoint: mountPoint}
+func NewNasVolume() *NasVolume {
+	return &NasVolume{MountPoint: Conf.Storage.NASVolumeMountPoint}
 }
 
 func (n *NasVolume) UploadFile(filename string, fileInfo *FileInfo) error {

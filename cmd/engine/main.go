@@ -23,7 +23,7 @@ var cmdBackup = &cobra.Command{
 	Use:   "backup",
 	Short: "backup",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := backup.Backup(options.SourcePath, options.MountPoint); err != nil {
+		if err := backup.Backup(options.SourcePath); err != nil {
 			fmt.Printf("backup failed, err: %v", err)
 		}
 	},
@@ -34,7 +34,6 @@ type Options struct {
 	Port int
 
 	SourcePath string
-	MountPoint string
 }
 
 var options Options
@@ -47,7 +46,6 @@ func init() {
 	f.StringVarP(&options.Host, "host", "H", "127.0.0.1", "server host")
 	f.IntVarP(&options.Port, "port", "p", 50051, "server port")
 	f.StringVarP(&options.SourcePath, "source", "s", "", "source path")
-	f.StringVarP(&options.MountPoint, "dest", "d", "", "dest path")
 
 	cmdBackup.MarkFlagRequired("source")
 	cmdBackup.MarkFlagRequired("dest")

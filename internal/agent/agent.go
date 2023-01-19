@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"errors"
 	"net"
 
 	"github.com/skyline93/syncbyte-go/pkg/logging"
@@ -18,12 +19,22 @@ type syncbyteServer struct {
 
 func (s *syncbyteServer) Backup(req *pb.BackupRequest, stream pb.Syncbyte_BackupServer) error {
 	ctx := context.TODO()
-	nas := NewNasVolume(req.DataStoreParams.MountPoint)
-	mgmt := NewBackupManager(nas, ctx)
+
+	var stor DataStore
+
+	switch Conf.Storage.Type {
+	case NAS:
+		stor = NewNasVolume()
+	// case S3:
+	default:
+		return errors.New("storage type not support")
+	}
+
+	mgmt := NewBackupManager(stor, ctx)
 
 	fiChan := make(chan FileInfo)
 
-	go mgmt.Backup(req.BackupParams.SourcePath, fiChan)
+	go mgmt.Backup(req.SourcePath, fiChan)
 
 	for fi := range fiChan {
 		var infos []*pb.PartInfo
@@ -65,14 +76,14 @@ func newServer() *syncbyteServer {
 	return &syncbyteServer{}
 }
 
-func RunServer(address string) error {
-	lis, err := net.Listen("tcp", address)
+func RunServer() error {
+	lis, err := net.Listen("tcp", Conf.GrpcAddr)
 	if err != nil {
 		logger.Errorf("run server failed, err: %v", err)
 		return err
 	}
 
-	logger.Infof("listen at %s", address)
+	logger.Infof("listen at %s", Conf.GrpcAddr)
 
 	grpcServer := grpc.NewServer()
 	pb.RegisterSyncbyteServer(grpcServer, newServer())

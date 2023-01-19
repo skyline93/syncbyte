@@ -8,16 +8,7 @@ service Syncbyte {
 }
 
 message BackupRequest {
-    BackupParams BackupParams = 1;
-    DataStoreParams DataStoreParams = 2;
-}
-
-message BackupParams {
     string SourcePath = 1;
-}
-
-message DataStoreParams {
-    string MountPoint = 1;
 }
 
 message BackupResponse {

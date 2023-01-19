@@ -21,25 +21,15 @@ var cmdRun = &cobra.Command{
 	Use:   "run",
 	Short: "run server of syncbyte-agent",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := agent.RunServer(fmt.Sprintf("%s:%d", options.Host, options.Port)); err != nil {
+		if err := agent.RunServer(); err != nil {
 			fmt.Printf("run server failed, err: %v", err)
 		}
 	},
 }
 
-type Options struct {
-	Host string
-	Port int
-}
-
-var options Options
-
 func init() {
+	cobra.OnInitialize(agent.InitConfig)
 	cmdRoot.AddCommand(cmdRun)
-
-	f := cmdRun.PersistentFlags()
-	f.StringVarP(&options.Host, "host", "H", "127.0.0.1", "server host")
-	f.IntVarP(&options.Port, "port", "p", 50051, "server port")
 }
 
 func Execute() {
