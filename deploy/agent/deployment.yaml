@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: syncbyte-agent
+  name: syncbyte-agent
+spec:
+  containers:
+  - command:
+    - agent
+    - run
+    image: glf9832/syncbyte:0.0.1
+    name: syncbyte-agent
+    ports:
+    - containerPort: 50051
+    resources: 
+      requests:
+        memory: "100Mi"
+        cpu: "0.5"
+      limits:
+        memory: "200Mi"
+        cpu: "1"
+    volumeMounts:
+      - name: config-vol
+        mountPath: /root
+  volumes:
+    - name: config-vol
+      configMap:
+        name: syncbyte-agent-configmap
+        items:
+        - key: agent.toml
+          path: agent.toml
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
