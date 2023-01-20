@@ -2,73 +2,50 @@ package logging
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sync"
 
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-var loggerMap sync.Map
+var loggerMap = LoggerMap{}
 
-func initLogger(name string) *zap.Logger {
+type LoggerMap struct {
+	sync.Map
+	rootPath string
+}
+
+func SetupLogger(rootPath string) {
+	loggerMap.rootPath = rootPath
+}
+
+func GetLogger(name string) *log.Logger {
+	v, ok := loggerMap.Load(name)
+	if ok {
+		return v.(*log.Logger)
+	}
+
+	if loggerMap.rootPath == "" {
+		loggerMap.rootPath = "logs"
+	}
+
 	hook := lumberjack.Logger{
-		Filename:  filepath.Join("logs", fmt.Sprintf("%s.log", name)),
+		Filename:  filepath.Join(loggerMap.rootPath, fmt.Sprintf("%s.log", name)),
 		MaxSize:   1024,
 		MaxAge:    365,
 		Compress:  true,
 		LocalTime: true,
 	}
 
-	fileWriter := zapcore.AddSync(&hook)
-	errorPriority := zap.LevelEnablerFunc(func(l zapcore.Level) bool { return l == zap.ErrorLevel })
+	loggerEntity := log.New()
+	loggerEntity.SetFormatter(&log.JSONFormatter{})
+	loggerEntity.SetOutput(io.MultiWriter(&hook, os.Stdout))
+	loggerEntity.SetLevel(log.DebugLevel)
 
-	consoleDebugging := zapcore.Lock(os.Stdout)
+	loggerMap.Store(name, loggerEntity)
 
-	fileConfig := zap.NewProductionEncoderConfig()
-	fileConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-
-	consoleConfig := zap.NewDevelopmentEncoderConfig()
-	consoleConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-
-	fileEncoder := zapcore.NewJSONEncoder(fileConfig)
-	consoleEncoder := zapcore.NewConsoleEncoder(consoleConfig)
-
-	stack := zap.AddStacktrace(errorPriority)
-	caller := zap.AddCaller()
-
-	core := zapcore.NewTee(
-		zapcore.NewCore(fileEncoder, fileWriter, zap.NewAtomicLevelAt(zapcore.DebugLevel)),
-		zapcore.NewCore(consoleEncoder, consoleDebugging, zap.NewAtomicLevelAt(zapcore.DebugLevel)),
-	)
-
-	logger := zap.New(core, stack, caller)
-
-	return logger
-}
-
-func GetLogger(name string) *zap.Logger {
-	v, ok := loggerMap.Load(name)
-	if !ok {
-		logger := initLogger(name)
-		loggerMap.Store(name, logger)
-
-		return logger
-	}
-
-	return v.(*zap.Logger)
-}
-
-func GetSugaredLogger(name string) *zap.SugaredLogger {
-	v, ok := loggerMap.Load(name)
-	if !ok {
-		logger := initLogger(name).Sugar()
-		loggerMap.Store(name, logger)
-
-		return logger
-	}
-
-	return v.(*zap.SugaredLogger)
+	return loggerEntity
 }

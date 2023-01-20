@@ -11,7 +11,7 @@ import (
 	pb "github.com/skyline93/syncbyte-go/internal/proto"
 )
 
-var logger = logging.GetSugaredLogger("backup")
+var logger = logging.GetLogger("backup")
 
 type syncbyteServer struct {
 	pb.UnimplementedSyncbyteServer

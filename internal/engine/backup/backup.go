@@ -10,7 +10,7 @@ import (
 	"github.com/skyline93/syncbyte-go/pkg/mongodb"
 )
 
-var logger = logging.GetSugaredLogger("backup")
+var logger = logging.GetLogger("backup")
 
 func Backup(sourcePath string) error {
 	mongoClient, err := mongodb.NewClient(config.Conf.MongodbUri)
