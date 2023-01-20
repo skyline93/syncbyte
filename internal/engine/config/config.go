@@ -1,7 +1,6 @@
 package config
 
 import (
-	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -27,11 +26,13 @@ func InitConfig() {
 		panic(err)
 	}
 
-	filePath := filepath.Join(home, fileName)
 	fileExt := path.Ext(fileName)
 	fileSuffix := strings.TrimSuffix(fileName, fileExt)
 
-	viper.AddConfigPath(home)
+	viper.AddConfigPath(".")
+	viper.AddConfigPath(filepath.Join(home, ".config"))
+	viper.AddConfigPath("/etc/syncbyte")
+
 	viper.SetConfigName(fileSuffix)
 	viper.SetConfigType(fileExt[1:])
 
@@ -44,15 +45,14 @@ func InitConfig() {
 	viper.SetDefault("database.password", "123456")
 	viper.SetDefault("database.dbname", "syncbyte")
 
-	_, err = os.Stat(filePath)
-	if os.IsNotExist(err) {
-		if err := viper.SafeWriteConfig(); err != nil {
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			if err := viper.SafeWriteConfig(); err != nil {
+				panic(err)
+			}
+		} else {
 			panic(err)
 		}
-	}
-
-	if err := viper.ReadInConfig(); err != nil {
-		panic(err)
 	}
 
 	Conf = &Config{}
