@@ -3,17 +3,15 @@ package backup
 import (
 	"context"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/skyline93/syncbyte-go/internal/engine/config"
 	"github.com/skyline93/syncbyte-go/internal/engine/grpc"
 	"github.com/skyline93/syncbyte-go/internal/engine/schema"
-	"github.com/skyline93/syncbyte-go/pkg/logging"
 	"github.com/skyline93/syncbyte-go/pkg/mongodb"
 )
 
-var logger = logging.GetLogger("backup")
-
 func Backup(sourcePath string) error {
-	mongoClient, err := mongodb.NewClient(config.Conf.MongodbUri)
+	mongoClient, err := mongodb.NewClient(config.Conf.Core.MongodbUri)
 	if err != nil {
 		panic(err)
 	}
@@ -30,11 +28,11 @@ func Backup(sourcePath string) error {
 
 	for fi := range fiChan {
 		if _, err := col.InsertOne(context.TODO(), fi); err != nil {
-			logger.Errorf("insert error, err: %v", err)
+			log.Errorf("insert error, err: %v", err)
 			continue
 		}
 
-		logger.Debugf("fi: %s", fi.String())
+		log.Debugf("fi: %s", fi.String())
 	}
 
 	return nil

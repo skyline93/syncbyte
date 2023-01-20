@@ -19,11 +19,17 @@ const (
 )
 
 type Config struct {
-	GrpcAddr string  `mapstructure:"grpc_addr"`
-	Storage  Storage `mapstructure:"storage"`
+	Core    CoreConfig    `mapstructure:"core"`
+	Storage StorageConfig `mapstructure:"storage"`
 }
 
-type Storage struct {
+type CoreConfig struct {
+	GrpcAddr string `mapstructure:"grpc_addr"`
+	LogPath  string `mapstructure:"log_path"`
+	LogLevel string `mapstructure:"log_level"`
+}
+
+type StorageConfig struct {
 	Type                StorageType `mapstructure:"type"`
 	NASVolumeMountPoint string      `mapstructure:"nas_volume_mountpoint"`
 }
@@ -46,7 +52,9 @@ func InitConfig() {
 	viper.SetConfigName(fileSuffix)
 	viper.SetConfigType(fileExt[1:])
 
-	viper.SetDefault("grpc_addr", "127.0.0.1:50051")
+	viper.SetDefault("core.grpc_addr", "127.0.0.1:50051")
+	viper.SetDefault("core.log_path", "/var/syncbyte/log")
+	viper.SetDefault("core.log_level", "info")
 	viper.SetDefault("storage.type", "nas")
 	viper.SetDefault("storage.nas_volume_mountpoint", "/var/syncbyte/data")
 

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	uuid "github.com/satori/go.uuid"
+	log "github.com/sirupsen/logrus"
 )
 
 type Job interface {
@@ -76,13 +77,13 @@ func NewWorkerPool(ctx context.Context, concurrent int) *WorkerPool {
 func (p *WorkerPool) addWorker() {
 	w := newWorker(p.ctx, p.JobChan)
 	go w.Run()
-	logger.Infof("new worker [%s]", w.ID)
+	log.Infof("new worker [%s]", w.ID)
 
 	p.mut.Lock()
 	p.Workers[w.ID] = *w
 	p.mut.Unlock()
 
-	logger.Infof("add worker [%s] to pool", w.ID)
+	log.Infof("add worker [%s] to pool", w.ID)
 }
 
 func (p *WorkerPool) delOnceWorker() {
@@ -95,14 +96,14 @@ func (p *WorkerPool) delOnceWorker() {
 	}
 	p.mut.RUnlock()
 
-	logger.Infof("cancel worker [%s]", worker.ID)
+	log.Infof("cancel worker [%s]", worker.ID)
 	worker.Cancel()
 
 	p.mut.Lock()
 	delete(p.Workers, worker.ID)
 	p.mut.Unlock()
 
-	logger.Infof("delete worker [%s] from pool", worker.ID)
+	log.Infof("delete worker [%s] from pool", worker.ID)
 }
 
 func (p *WorkerPool) Submit(j Job) {
@@ -137,10 +138,10 @@ func (w *worker) Run() {
 	for {
 		select {
 		case job := <-w.jobChan:
-			logger.Infof("worker [%s] receive job", w.ID)
+			log.Infof("worker [%s] receive job", w.ID)
 			w.run(job)
 		case <-w.ctx.Done():
-			logger.Infof("worker [%s] exit", w.ID)
+			log.Infof("worker [%s] exit", w.ID)
 			return
 		}
 	}
@@ -151,7 +152,7 @@ func (w *worker) run(j Job) {
 
 	defer func() {
 		if err != nil {
-			logger.Errorf("job error, msg: %v", err)
+			log.Errorf("job error, msg: %v", err)
 		}
 	}()
 

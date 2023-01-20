@@ -5,13 +5,11 @@ import (
 	"errors"
 	"net"
 
-	"github.com/skyline93/syncbyte-go/pkg/logging"
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 
 	pb "github.com/skyline93/syncbyte-go/internal/proto"
 )
-
-var logger = logging.GetLogger("backup")
 
 type syncbyteServer struct {
 	pb.UnimplementedSyncbyteServer
@@ -77,13 +75,13 @@ func newServer() *syncbyteServer {
 }
 
 func RunServer() error {
-	lis, err := net.Listen("tcp", Conf.GrpcAddr)
+	lis, err := net.Listen("tcp", Conf.Core.GrpcAddr)
 	if err != nil {
-		logger.Errorf("run server failed, err: %v", err)
+		log.Errorf("run server failed, err: %v", err)
 		return err
 	}
 
-	logger.Infof("listen at %s", Conf.GrpcAddr)
+	log.Infof("listen at %s", Conf.Core.GrpcAddr)
 
 	grpcServer := grpc.NewServer()
 	pb.RegisterSyncbyteServer(grpcServer, newServer())

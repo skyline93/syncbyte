@@ -4,6 +4,8 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func scanDir(root string, fChan chan string) error {
@@ -35,14 +37,14 @@ func NewBackupManager(store DataStore, ctx context.Context) *BackupManager {
 func (b *BackupManager) Backup(dir string, fiChan chan FileInfo) error {
 	fChan := make(chan string)
 
-	logger.Infof("scan dir in %s", dir)
+	log.Infof("scan dir in %s", dir)
 	go scanDir(dir, fChan)
 
 	for f := range fChan {
 		var fi FileInfo
 
 		if err := b.dataStore.UploadFile(f, &fi); err != nil {
-			logger.Errorf("upload file failed, err: %v", err)
+			log.Errorf("upload file failed, err: %v", err)
 			continue
 		}
 

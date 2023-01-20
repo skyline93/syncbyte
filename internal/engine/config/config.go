@@ -13,9 +13,15 @@ import (
 var Conf *Config
 
 type Config struct {
-	GrpcServerAddr string           `mapstructure:"grpc_server_addr"`
-	MongodbUri     string           `mapstructure:"mongodb_uri"`
-	Database       database.Options `mapstructure:"database"`
+	Core     CoreConfig       `mapstructure:"core"`
+	Database database.Options `mapstructure:"database"`
+}
+
+type CoreConfig struct {
+	GrpcServerAddr string `mapstructure:"grpc_server_addr"`
+	LogPath        string `mapstructure:"log_path"`
+	LogLevel       string `mapstructure:"log_level"`
+	MongodbUri     string `mapstructure:"mongodb_uri"`
 }
 
 func InitConfig() {
@@ -36,8 +42,10 @@ func InitConfig() {
 	viper.SetConfigName(fileSuffix)
 	viper.SetConfigType(fileExt[1:])
 
-	viper.SetDefault("grpc_server_addr", "127.0.0.1:50051")
-	viper.SetDefault("mongodb_uri", "mongodb://mongoadmin:123456@127.0.0.1:27017/?maxPoolSize=20&w=majority")
+	viper.SetDefault("core.grpc_server_addr", "127.0.0.1:50051")
+	viper.SetDefault("core.log_path", "/var/syncbyte/log")
+	viper.SetDefault("core.log_level", "info")
+	viper.SetDefault("core.mongodb_uri", "mongodb://mongoadmin:123456@127.0.0.1:27017/?maxPoolSize=20&w=majority")
 	viper.SetDefault("database.type", "postgresql")
 	viper.SetDefault("database.host", "127.0.0.1")
 	viper.SetDefault("database.port", "5432")

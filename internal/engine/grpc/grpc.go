@@ -19,7 +19,7 @@ func NewClient(ctx context.Context) (*Client, error) {
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
-	conn, err := grpc.Dial(config.Conf.GrpcServerAddr, opts...)
+	conn, err := grpc.Dial(config.Conf.Core.GrpcServerAddr, opts...)
 	if err != nil {
 		return nil, err
 	}
