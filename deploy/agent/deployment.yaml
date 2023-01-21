@@ -7,9 +7,9 @@ metadata:
 spec:
   containers:
   - command:
-    - agent
+    - syncbyte-agent
     - run
-    image: glf9832/syncbyte:0.0.1
+    image: glf9832/syncbyte:0.0.2-alpha
     name: syncbyte-agent
     ports:
     - containerPort: 50051
@@ -22,7 +22,7 @@ spec:
         cpu: "1"
     volumeMounts:
       - name: config-vol
-        mountPath: /root
+        mountPath: /etc/syncbyte
   volumes:
     - name: config-vol
       configMap:
