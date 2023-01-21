@@ -9,6 +9,7 @@ import (
 	"github.com/skyline93/syncbyte-go/internal/engine/backup"
 	"github.com/skyline93/syncbyte-go/internal/engine/config"
 	"github.com/skyline93/syncbyte-go/internal/engine/repository"
+	"github.com/skyline93/syncbyte-go/internal/engine/scheduler"
 	"github.com/skyline93/syncbyte-go/internal/pkg/logging"
 	"github.com/spf13/cobra"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -65,6 +66,43 @@ var cmdCreate = &cobra.Command{
 	},
 }
 
+var cmdRun = &cobra.Command{
+	Use:   "run",
+	Short: "run",
+	Run: func(cmd *cobra.Command, args []string) {
+		cmd.Help()
+		os.Exit(0)
+	},
+}
+
+var cmdScheduledJob = &cobra.Command{
+	Use:   "scheduledJob",
+	Short: "scheduledJob",
+	Run: func(cmd *cobra.Command, args []string) {
+		// jobid, err := scheduling.ScheduleBackup(uint(scheduledJobOptions.JobID))
+		// if err != nil {
+		// 	log.Errorf("schedule backup job failed, err: %v", err)
+		// 	os.Exit(1)
+		// }
+		// log.Infof("schedule backup job successed, jobid: %d", jobid)
+
+		// ======================================================
+		scheduledJobs, err := scheduler.GetTodoScheduledJobs()
+		if err != nil {
+			log.Errorf("get scheduled jobs failed, err: %v", err)
+			os.Exit(1)
+		}
+
+		for _, j := range scheduledJobs {
+			if err = j.Run(); err != nil {
+				log.Errorf("run scheduled job failed, err: %v", err)
+			}
+		}
+
+		// TODO
+	},
+}
+
 var cmdBackupPolicy = &cobra.Command{
 	Use:   "backuppolicy",
 	Short: "backuppolicy",
@@ -112,13 +150,20 @@ type BackupPolicyOptions struct {
 	Retention int
 }
 
+type ScheduledJobOptions struct {
+	JobID int
+}
+
 var plOptions BackupPolicyOptions
+var scheduledJobOptions ScheduledJobOptions
 
 func init() {
 	cobra.OnInitialize(config.InitConfig, repository.InitRepository)
 	cmdRoot.AddCommand(cmdBackup)
 	cmdRoot.AddCommand(cmdCreate)
+	cmdRoot.AddCommand(cmdRun)
 	cmdCreate.AddCommand(cmdBackupPolicy)
+	cmdRun.AddCommand(cmdScheduledJob)
 
 	f := cmdBackup.Flags()
 	f.StringVarP(&options.Host, "host", "H", "127.0.0.1", "server host")
@@ -133,6 +178,9 @@ func init() {
 	fcpl.StringVarP(&plOptions.Resource.Type, "type", "t", "", "resource type")
 	fcpl.StringVarP(&plOptions.Resource.Name, "name", "n", "", "resource name")
 	fcpl.StringVarP(&plOptions.Resource.Dir, "dir", "d", "", "backup dir, only nas resource")
+
+	fsj := cmdScheduledJob.Flags()
+	fsj.IntVarP(&scheduledJobOptions.JobID, "jobid", "j", 0, "scheduled job id")
 }
 
 func Execute() {

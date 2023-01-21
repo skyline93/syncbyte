@@ -16,15 +16,9 @@ func InitRepository() {
 	}
 
 	if err = Repo.AutoMigrate(
-		&DBResource{},
 		&Resource{},
-		&S3Backend{},
-		&BackupJob{},
 		&BackupSet{},
-		&RestoreJob{},
-		&RestoreDBResource{},
 		&BackupPolicy{},
-		&Agent{},
 		&ScheduledJob{},
 	); err != nil {
 		panic(err)
