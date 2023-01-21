@@ -3,7 +3,7 @@ package repository
 import (
 	"time"
 
-	"github.com/skyline93/syncbyte-go/internal/pkg/types"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -20,6 +20,13 @@ type DBResource struct {
 	Args     string
 }
 
+type Resource struct {
+	gorm.Model
+	Name string `gorm:"unique"`
+	Type string
+	Args datatypes.JSON
+}
+
 type S3Backend struct {
 	gorm.Model
 	EndPoint    string
@@ -34,16 +41,7 @@ type BackupPolicy struct {
 	gorm.Model
 	ResourceID uint
 	Retention  int
-	IsCompress bool `gorm:"default:false"`
-	AgentID    uint
 	Status     string
-
-	ScheduleType string
-	Cron         string
-	Frequency    int
-	StartTime    types.LocalTime
-	EndTime      types.LocalTime
-	IsActive     bool `gorm:"default:true"`
 }
 
 type BackupJob struct {

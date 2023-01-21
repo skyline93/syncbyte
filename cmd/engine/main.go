@@ -56,6 +56,42 @@ var cmdBackup = &cobra.Command{
 	},
 }
 
+var cmdCreate = &cobra.Command{
+	Use:   "create",
+	Short: "create",
+	Run: func(cmd *cobra.Command, args []string) {
+		cmd.Help()
+		os.Exit(0)
+	},
+}
+
+var cmdBackupPolicy = &cobra.Command{
+	Use:   "backuppolicy",
+	Short: "backuppolicy",
+	Run: func(cmd *cobra.Command, args []string) {
+		func() {
+			var args interface{}
+			if plOptions.Resource.Type == string(backup.NAS) {
+				args = backup.NasResourceArgs{
+					Dir: plOptions.Resource.Dir,
+				}
+			}
+
+			res := backup.Resource{
+				Name: plOptions.Resource.Name,
+				Type: plOptions.Resource.Type,
+				Args: args,
+			}
+			plid, err := backup.CreatePolicy(res, plOptions.Retention)
+			if err != nil {
+				log.Infof("create backup policy failed, err: %v", err)
+				os.Exit(1)
+			}
+			log.Infof("create backup policy successed, policy id is %d", plid)
+		}()
+	},
+}
+
 type Options struct {
 	Host string
 	Port int
@@ -65,9 +101,24 @@ type Options struct {
 
 var options Options
 
+type Resource struct {
+	Name string
+	Type string
+	Dir  string
+}
+
+type BackupPolicyOptions struct {
+	Resource  Resource
+	Retention int
+}
+
+var plOptions BackupPolicyOptions
+
 func init() {
 	cobra.OnInitialize(config.InitConfig, repository.InitRepository)
 	cmdRoot.AddCommand(cmdBackup)
+	cmdRoot.AddCommand(cmdCreate)
+	cmdCreate.AddCommand(cmdBackupPolicy)
 
 	f := cmdBackup.Flags()
 	f.StringVarP(&options.Host, "host", "H", "127.0.0.1", "server host")
@@ -76,6 +127,12 @@ func init() {
 
 	cmdBackup.MarkFlagRequired("source")
 	cmdBackup.MarkFlagRequired("dest")
+
+	fcpl := cmdBackupPolicy.Flags()
+	fcpl.IntVarP(&plOptions.Retention, "retention", "r", 7, "backup set save retention")
+	fcpl.StringVarP(&plOptions.Resource.Type, "type", "t", "", "resource type")
+	fcpl.StringVarP(&plOptions.Resource.Name, "name", "n", "", "resource name")
+	fcpl.StringVarP(&plOptions.Resource.Dir, "dir", "d", "", "backup dir, only nas resource")
 }
 
 func Execute() {
