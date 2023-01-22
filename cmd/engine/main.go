@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -8,9 +9,11 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/skyline93/syncbyte-go/internal/engine/backup"
 	"github.com/skyline93/syncbyte-go/internal/engine/config"
+	"github.com/skyline93/syncbyte-go/internal/engine/job"
 	"github.com/skyline93/syncbyte-go/internal/engine/repository"
-	"github.com/skyline93/syncbyte-go/internal/engine/scheduledjob"
+	"github.com/skyline93/syncbyte-go/internal/engine/scheduling"
 	"github.com/skyline93/syncbyte-go/internal/pkg/logging"
+	"github.com/skyline93/syncbyte-go/internal/pkg/scheduler"
 	"github.com/spf13/cobra"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
@@ -47,16 +50,6 @@ var cmdRoot = &cobra.Command{
 	},
 }
 
-var cmdBackup = &cobra.Command{
-	Use:   "backup",
-	Short: "backup",
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := backup.Backup(options.SourcePath); err != nil {
-			fmt.Printf("backup failed, err: %v", err)
-		}
-	},
-}
-
 var cmdCreate = &cobra.Command{
 	Use:   "create",
 	Short: "create",
@@ -75,31 +68,27 @@ var cmdRun = &cobra.Command{
 	},
 }
 
-var cmdScheduledJob = &cobra.Command{
-	Use:   "scheduledJob",
-	Short: "scheduledJob",
+var cmdScheduler = &cobra.Command{
+	Use:   "scheduler",
+	Short: "scheduler",
 	Run: func(cmd *cobra.Command, args []string) {
-		// jobid, err := scheduling.ScheduleBackup(uint(scheduledJobOptions.JobID))
-		// if err != nil {
-		// 	log.Errorf("schedule backup job failed, err: %v", err)
-		// 	os.Exit(1)
-		// }
-		// log.Infof("schedule backup job successed, jobid: %d", jobid)
+		sch := scheduler.New(context.TODO(), config.Conf.Core.MaxConcurrentNum)
+		scheduler.S = sch
+		sch.AddPeriodicalJob(job.NewJobScheduler(sch, config.Conf.Core.JobSchedulerCron))
+		sch.Start()
+	},
+}
 
-		// ======================================================
-		scheduledJobs, err := scheduledjob.GetTodoScheduledJobs()
+var cmdScheduledJob = &cobra.Command{
+	Use:   "scheduledjob",
+	Short: "scheduledjob",
+	Run: func(cmd *cobra.Command, args []string) {
+		jobid, err := scheduling.ScheduleBackup(uint(scheduledJobOptions.BackupPolicyID))
 		if err != nil {
-			log.Errorf("get scheduled jobs failed, err: %v", err)
+			log.Errorf("schedule backup job failed, err: %v", err)
 			os.Exit(1)
 		}
-
-		for _, j := range scheduledJobs {
-			if err = j.Run(); err != nil {
-				log.Errorf("run scheduled job failed, err: %v", err)
-			}
-		}
-
-		// TODO
+		log.Infof("schedule backup job successed, jobid: %d", jobid)
 	},
 }
 
@@ -130,15 +119,6 @@ var cmdBackupPolicy = &cobra.Command{
 	},
 }
 
-type Options struct {
-	Host string
-	Port int
-
-	SourcePath string
-}
-
-var options Options
-
 type Resource struct {
 	Name string
 	Type string
@@ -151,7 +131,7 @@ type BackupPolicyOptions struct {
 }
 
 type ScheduledJobOptions struct {
-	JobID int
+	BackupPolicyID int
 }
 
 var plOptions BackupPolicyOptions
@@ -159,19 +139,11 @@ var scheduledJobOptions ScheduledJobOptions
 
 func init() {
 	cobra.OnInitialize(config.InitConfig, repository.InitRepository)
-	cmdRoot.AddCommand(cmdBackup)
 	cmdRoot.AddCommand(cmdCreate)
 	cmdRoot.AddCommand(cmdRun)
 	cmdCreate.AddCommand(cmdBackupPolicy)
 	cmdRun.AddCommand(cmdScheduledJob)
-
-	f := cmdBackup.Flags()
-	f.StringVarP(&options.Host, "host", "H", "127.0.0.1", "server host")
-	f.IntVarP(&options.Port, "port", "p", 50051, "server port")
-	f.StringVarP(&options.SourcePath, "source", "s", "", "source path")
-
-	cmdBackup.MarkFlagRequired("source")
-	cmdBackup.MarkFlagRequired("dest")
+	cmdRun.AddCommand(cmdScheduler)
 
 	fcpl := cmdBackupPolicy.Flags()
 	fcpl.IntVarP(&plOptions.Retention, "retention", "r", 7, "backup set save retention")
@@ -180,7 +152,9 @@ func init() {
 	fcpl.StringVarP(&plOptions.Resource.Dir, "dir", "d", "", "backup dir, only nas resource")
 
 	fsj := cmdScheduledJob.Flags()
-	fsj.IntVarP(&scheduledJobOptions.JobID, "jobid", "j", 0, "scheduled job id")
+	fsj.IntVarP(&scheduledJobOptions.BackupPolicyID, "backup-policy-id", "p", 0, "backup policy id")
+
+	cmdScheduledJob.MarkFlagRequired("backup-policy-id")
 }
 
 func Execute() {

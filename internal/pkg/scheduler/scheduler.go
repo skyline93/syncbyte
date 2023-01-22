@@ -9,6 +9,8 @@ import (
 	"github.com/skyline93/syncbyte-go/internal/pkg/worker"
 )
 
+var S *Scheduler
+
 type Job interface {
 	Execute() error
 	Key() string
@@ -53,7 +55,7 @@ func (s *Scheduler) Start() {
 	for {
 		select {
 		case <-time.NewTicker(time.Second * 10).C:
-			log.Debugf("ticker run... periodical jobs")
+			log.Debugf("ticker run...")
 			s.periodicalJobs.Range(func(k, v any) bool {
 				j, ok := v.(PeriodicalJob)
 				if !ok {

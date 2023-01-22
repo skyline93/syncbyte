@@ -18,10 +18,12 @@ type Config struct {
 }
 
 type CoreConfig struct {
-	GrpcServerAddr string `mapstructure:"grpc_server_addr"`
-	LogPath        string `mapstructure:"log_path"`
-	LogLevel       string `mapstructure:"log_level"`
-	MongodbUri     string `mapstructure:"mongodb_uri"`
+	GrpcServerAddr   string `mapstructure:"grpc_server_addr"`
+	LogPath          string `mapstructure:"log_path"`
+	LogLevel         string `mapstructure:"log_level"`
+	MongodbUri       string `mapstructure:"mongodb_uri"`
+	MaxConcurrentNum int    `mapstructure:"max_concurrent_num"`
+	JobSchedulerCron string `mapstructure:"job_scheduler_cron"`
 }
 
 func InitConfig() {
@@ -46,6 +48,8 @@ func InitConfig() {
 	viper.SetDefault("core.log_path", "/var/syncbyte/log")
 	viper.SetDefault("core.log_level", "debug")
 	viper.SetDefault("core.mongodb_uri", "mongodb://mongoadmin:123456@127.0.0.1:27017/?maxPoolSize=20&w=majority")
+	viper.SetDefault("core.max_concurrent_num", 64)
+	viper.SetDefault("core.job_scheduler_cron", "* * * * *")
 	viper.SetDefault("database.type", "postgresql")
 	viper.SetDefault("database.host", "127.0.0.1")
 	viper.SetDefault("database.port", "5432")
