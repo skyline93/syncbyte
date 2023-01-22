@@ -1,4 +1,4 @@
-package agent
+package worker
 
 import (
 	"context"
@@ -9,12 +9,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type Job interface {
-	Run() error
+type Task interface {
+	Execute() error
 }
 
-type WorkerPool struct {
-	JobChan     chan Job
+type Pool struct {
+	TaskChan    chan Task
 	Concurrency int
 
 	Workers map[string]worker
@@ -27,11 +27,11 @@ type WorkerPool struct {
 	cancel context.CancelFunc
 }
 
-func NewWorkerPool(ctx context.Context, concurrent int) *WorkerPool {
+func NewPool(ctx context.Context, concurrent int) *Pool {
 	ctx, cancel := context.WithCancel(ctx)
 
-	p := &WorkerPool{
-		JobChan:          make(chan Job),
+	p := &Pool{
+		TaskChan:         make(chan Task),
 		addWorkerChan:    make(chan struct{}),
 		cancelWorkerChan: make(chan struct{}),
 		Concurrency:      concurrent,
@@ -74,8 +74,8 @@ func NewWorkerPool(ctx context.Context, concurrent int) *WorkerPool {
 	return p
 }
 
-func (p *WorkerPool) addWorker() {
-	w := newWorker(p.ctx, p.JobChan)
+func (p *Pool) addWorker() {
+	w := newWorker(p.ctx, p.TaskChan)
 	go w.Run()
 	log.Infof("new worker [%s]", w.ID)
 
@@ -86,7 +86,7 @@ func (p *WorkerPool) addWorker() {
 	log.Infof("add worker [%s] to pool", w.ID)
 }
 
-func (p *WorkerPool) delOnceWorker() {
+func (p *Pool) delOnceWorker() {
 	var worker worker
 
 	p.mut.RLock()
@@ -106,28 +106,28 @@ func (p *WorkerPool) delOnceWorker() {
 	log.Infof("delete worker [%s] from pool", worker.ID)
 }
 
-func (p *WorkerPool) Submit(j Job) {
-	p.JobChan <- j
+func (p *Pool) Submit(task Task) {
+	p.TaskChan <- task
 }
 
-func (p *WorkerPool) SetPoolSize(c int) {
+func (p *Pool) SetPoolSize(c int) {
 	p.Concurrency = c
 }
 
 type worker struct {
-	ID      string
-	jobChan chan Job
+	ID       string
+	taskChan chan Task
 
 	ctx    context.Context
 	Cancel context.CancelFunc
 }
 
-func newWorker(ctx context.Context, jobChan chan Job) *worker {
+func newWorker(ctx context.Context, taskChan chan Task) *worker {
 	c, cancel := context.WithCancel(ctx)
 
 	return &worker{
-		ID:      uuid.NewV4().String(),
-		jobChan: jobChan,
+		ID:       uuid.NewV4().String(),
+		taskChan: taskChan,
 
 		ctx:    c,
 		Cancel: cancel,
@@ -137,9 +137,9 @@ func newWorker(ctx context.Context, jobChan chan Job) *worker {
 func (w *worker) Run() {
 	for {
 		select {
-		case job := <-w.jobChan:
-			log.Infof("worker [%s] receive job", w.ID)
-			w.run(job)
+		case task := <-w.taskChan:
+			log.Infof("worker [%s] receive task", w.ID)
+			w.run(task)
 		case <-w.ctx.Done():
 			log.Infof("worker [%s] exit", w.ID)
 			return
@@ -147,18 +147,19 @@ func (w *worker) Run() {
 	}
 }
 
-func (w *worker) run(j Job) {
+func (w *worker) run(t Task) {
 	var err error
 
 	defer func() {
 		if err != nil {
-			log.Errorf("job error, msg: %v", err)
+			log.Errorf("task error, msg: %v", err)
 		}
 	}()
 
-	err = j.Run()
+	err = t.Execute()
+	log.Infof("task execute completed")
 }
 
-func (w *worker) Submit(j Job) {
-	w.jobChan <- j
+func (w *worker) Submit(t Task) {
+	w.taskChan <- t
 }

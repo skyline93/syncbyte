@@ -9,7 +9,7 @@ import (
 	"github.com/skyline93/syncbyte-go/internal/engine/backup"
 	"github.com/skyline93/syncbyte-go/internal/engine/config"
 	"github.com/skyline93/syncbyte-go/internal/engine/repository"
-	"github.com/skyline93/syncbyte-go/internal/engine/scheduler"
+	"github.com/skyline93/syncbyte-go/internal/engine/scheduledjob"
 	"github.com/skyline93/syncbyte-go/internal/pkg/logging"
 	"github.com/spf13/cobra"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -87,7 +87,7 @@ var cmdScheduledJob = &cobra.Command{
 		// log.Infof("schedule backup job successed, jobid: %d", jobid)
 
 		// ======================================================
-		scheduledJobs, err := scheduler.GetTodoScheduledJobs()
+		scheduledJobs, err := scheduledjob.GetTodoScheduledJobs()
 		if err != nil {
 			log.Errorf("get scheduled jobs failed, err: %v", err)
 			os.Exit(1)
