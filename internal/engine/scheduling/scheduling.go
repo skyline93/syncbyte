@@ -8,10 +8,10 @@ import (
 	"gorm.io/datatypes"
 )
 
-func ScheduleBackup(policyID uint) (jobID uint, err error) {
+func ScheduleBackup(resourceID uint) (jobID uint, err error) {
 	var jobType = "backup"
 
-	pl := backup.GetPolicy(policyID)
+	pl := backup.GetPolicyByResource(resourceID)
 
 	tx := repository.Repo.Begin()
 	defer func() {

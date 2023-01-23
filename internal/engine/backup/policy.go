@@ -76,6 +76,30 @@ type Policy struct {
 	Resource   Resource
 }
 
+func GetPolicyByResource(resourceID uint) *Policy {
+	res := repository.Resource{}
+	if result := repository.Repo.First(&res, resourceID); result.Error != nil {
+		return nil
+	}
+
+	pl := repository.BackupPolicy{}
+	if result := repository.Repo.Where("resource_id = ?", res.ID).First(&pl); result.Error != nil {
+		return nil
+	}
+
+	return &Policy{
+		ID:         pl.ID,
+		Retention:  pl.Retention,
+		Status:     pl.Status,
+		ResourceID: pl.ResourceID,
+		Resource: Resource{
+			Name: res.Name,
+			Type: res.Type,
+			Args: res.Args,
+		},
+	}
+}
+
 func GetPolicy(policyID uint) *Policy {
 	pl := repository.BackupPolicy{}
 	if result := repository.Repo.First(&pl, policyID); result.Error != nil {
