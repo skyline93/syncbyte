@@ -25,6 +25,7 @@ type BackupSet struct {
 	gorm.Model
 	IsValid    bool `gorm:"default:false"`
 	Size       int64
+	ScanSize   int64
 	BackupTime time.Time
 	ResourceID uint
 	Retention  int

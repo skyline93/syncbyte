@@ -64,7 +64,23 @@ func (b *BackupJob) execute() (err error) {
 
 	col := mongoClient.GetCollection(fmt.Sprintf("backupset-%d", b.BackupSetID))
 
+	var totalSize, scanSize int64
+
 	for fi := range fiChan {
+		var size int64
+		for _, i := range fi.PartInfos {
+			size += i.Size
+		}
+
+		scanSize += fi.Size
+		totalSize += size
+
+		log.Infof("set backupset totalsize: %d, scansize: %d", size, scanSize)
+		if err = backupset.SetSize(totalSize, scanSize); err != nil {
+			log.Errorf("set bacckupset size error, err: %v", err)
+			continue
+		}
+
 		if _, err := col.InsertOne(context.TODO(), fi); err != nil {
 			log.Errorf("insert error, err: %v", err)
 			continue

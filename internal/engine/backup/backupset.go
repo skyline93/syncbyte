@@ -45,3 +45,10 @@ func (s *BackupSet) SetAvailability(isValid bool) error {
 	}
 	return nil
 }
+
+func (s *BackupSet) SetSize(size int64, scanSize int64) error {
+	if result := repository.Repo.Model(&repository.BackupSet{}).Where("id = ?", s.ID).Updates(repository.BackupSet{Size: size, ScanSize: scanSize}); result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
