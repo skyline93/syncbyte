@@ -6,29 +6,6 @@ import (
 	"github.com/skyline93/syncbyte-go/internal/pkg/scheduler"
 )
 
-type ScheduledJob struct {
-	BaseJob
-	ID           uint
-	JobType      string
-	ResourceID   uint
-	ResourceType string
-	Args         []byte
-}
-
-func (s *ScheduledJob) start() error {
-	if result := repository.Repo.Model(&repository.ScheduledJob{}).Where("id = ?", s.ID).Update("status", "running"); result.Error != nil {
-		return result.Error
-	}
-	return nil
-}
-
-func (s *ScheduledJob) complete() error {
-	if result := repository.Repo.Model(&repository.ScheduledJob{}).Where("id = ?", s.ID).Update("status", "completed"); result.Error != nil {
-		return result.Error
-	}
-	return nil
-}
-
 type Scheduler struct {
 	BasePeriodicalJob
 }

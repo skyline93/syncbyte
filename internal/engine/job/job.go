@@ -6,6 +6,7 @@ import (
 	"github.com/gorhill/cronexpr"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
+	"github.com/skyline93/syncbyte-go/internal/engine/repository"
 	"github.com/skyline93/syncbyte-go/internal/pkg/scheduler"
 )
 
@@ -44,4 +45,27 @@ func (pj *BasePeriodicalJob) SetNextFireTime() {
 
 	nt := cronexpr.MustParse(pj.Cron).Next(time.Now())
 	pj.nextFireTime = &nt
+}
+
+type ScheduledJob struct {
+	BaseJob
+	ID           uint
+	JobType      string
+	ResourceID   uint
+	ResourceType string
+	Args         []byte
+}
+
+func (s *ScheduledJob) start() error {
+	if result := repository.Repo.Model(&repository.ScheduledJob{}).Where("id = ?", s.ID).Update("status", "running"); result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func (s *ScheduledJob) complete() error {
+	if result := repository.Repo.Model(&repository.ScheduledJob{}).Where("id = ?", s.ID).Update("status", "completed"); result.Error != nil {
+		return result.Error
+	}
+	return nil
 }
