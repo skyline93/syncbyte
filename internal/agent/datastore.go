@@ -5,7 +5,9 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"syscall"
@@ -69,6 +71,16 @@ func (b *Block) Compress() ([]byte, error) {
 	}
 
 	return compressedBuf[:n], nil
+}
+
+func (b *Block) Uncompress() ([]byte, error) {
+	var unCompressedBuf = make([]byte, 10*len(b.Data))
+	n, err := lz4.UncompressBlock(b.Data, unCompressedBuf)
+	if err != nil {
+		return nil, err
+	}
+
+	return unCompressedBuf[:n], nil
 }
 
 func (b *Block) Hash() string {
@@ -227,4 +239,32 @@ func (n *NasVolume) uploadFile(filename string, buf []byte) error {
 	}
 
 	return nil
+}
+
+func (n *NasVolume) DownloadFile(destDir string, filename string, fileInfo *FileInfo) error {
+	if fileInfo.PartInfos == nil {
+	}
+
+	file, err := os.Open(filepath.Join(n.MountPoint, fileInfo.Path))
+	if err != nil {
+		return err
+	}
+
+}
+
+func downloadSmallFile(destDir string, filename string, fileInfo *FileInfo) error {
+	file, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+
+	buf, err := ioutil.ReadAll(file)
+
+	b := Block{Data: buf}
+	unCompressedBuf, err := b.Uncompress()
+	if err != nil {
+		return err
+	}
+
+	
 }
