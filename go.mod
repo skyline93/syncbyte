@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/pierrec/lz4 v2.6.1+incompatible
+	github.com/pierrec/lz4/v4 v4.1.17
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1

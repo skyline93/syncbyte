@@ -10,7 +10,8 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/pierrec/lz4"
+	"github.com/pierrec/lz4/v4"
+	log "github.com/sirupsen/logrus"
 )
 
 var blockSize int64 = 1024 * 1024
@@ -44,12 +45,43 @@ func (fi *FileInfo) String() string {
 	return string(v)
 }
 
+type Block struct {
+	Data []byte
+}
+
+func (b *Block) Compress() ([]byte, error) {
+	var (
+		compressedBuf                  = make([]byte, lz4.CompressBlockBound(len(b.Data)))
+		c             lz4.CompressorHC = lz4.CompressorHC{Level: lz4.Level2}
+	)
+
+	n, err := c.CompressBlock(b.Data, compressedBuf)
+	if err != nil {
+		return nil, err
+	}
+
+	if n == 0 {
+		return b.Data, nil
+	}
+
+	if n >= len(b.Data) {
+		return b.Data, nil
+	}
+
+	return compressedBuf[:n], nil
+}
+
+func (b *Block) Hash() string {
+	h := md5.New()
+	h.Write(b.Data)
+	return hex.EncodeToString(h.Sum(nil))
+}
+
 func UploadBigFile(filename string, callback func(string, []byte) error, fileInfo *FileInfo) error {
 	var (
-		buf        []byte = make([]byte, blockSize)
-		compressed []byte = make([]byte, blockSize*2)
-		partIndex  int    = 1
-		partInfos  []*PartInfo
+		buf       []byte = make([]byte, blockSize)
+		partIndex int    = 1
+		partInfos []*PartInfo
 	)
 
 	fi, err := os.Stat(filename)
@@ -75,16 +107,18 @@ func UploadBigFile(filename string, callback func(string, []byte) error, fileInf
 			return err
 		}
 
-		l, err := lz4.CompressBlock(buf[:rSize], compressed, nil)
+		block := Block{Data: buf[:rSize]}
+
+		compressedBuf, err := block.Compress()
 		if err != nil {
 			return err
 		}
 
-		h := md5.New()
-		h.Write(buf)
-		hash := hex.EncodeToString(h.Sum(nil))
+		hash := block.Hash()
 
-		if err := callback(hash, compressed[:l]); err != nil {
+		log.Debugf("buf size: %d, compressedBuf size: %d", rSize, len(compressedBuf))
+
+		if err := callback(hash, compressedBuf); err != nil {
 			return err
 		}
 
@@ -107,10 +141,7 @@ func UploadBigFile(filename string, callback func(string, []byte) error, fileInf
 }
 
 func UploadSmallFile(filename string, callback func(string, []byte) error, fileInfo *FileInfo) error {
-	var (
-		buf        []byte = make([]byte, blockSize)
-		compressed []byte = make([]byte, blockSize*2)
-	)
+	var buf []byte = make([]byte, blockSize)
 
 	fi, err := os.Stat(filename)
 	if err != nil {
@@ -132,12 +163,17 @@ func UploadSmallFile(filename string, callback func(string, []byte) error, fileI
 		}
 	}
 
-	l, err := lz4.CompressBlock(buf[:rSize], compressed, nil)
+	block := Block{Data: buf[:rSize]}
+
+	compressedBuf, err := block.Compress()
 	if err != nil {
 		return err
 	}
 
-	if err := callback(hReader.Hash(), compressed[:l]); err != nil {
+	hash := block.Hash()
+	log.Debugf("buf size: %d, compressedBuf size: %d", rSize, len(compressedBuf))
+
+	if err := callback(hash, compressedBuf); err != nil {
 		return err
 	}
 
