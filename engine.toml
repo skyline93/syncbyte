@@ -1,0 +1,16 @@
+[core]
+grpc_server_addr = '127.0.0.1:50052'
+job_scheduler_cron = '* * * * *'
+listen_addr = '0.0.0.0:50051'
+log_level = 'debug'
+log_path = 'log'
+max_concurrent_num = 64
+mongodb_uri = 'mongodb://mongoadmin:123456@127.0.0.1:27017/?maxPoolSize=20&w=majority'
+
+[database]
+dbname = 'syncbyte'
+host = '127.0.0.1'
+password = '123456'
+port = '5432'
+type = 'postgresql'
+user = 'syncbyte'

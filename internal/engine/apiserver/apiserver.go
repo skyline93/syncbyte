@@ -4,6 +4,8 @@ import (
 	"context"
 	"net"
 
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
 	log "github.com/sirupsen/logrus"
 	"github.com/skyline93/syncbyte-go/internal/engine/backup"
 	"github.com/skyline93/syncbyte-go/internal/engine/config"
@@ -58,7 +60,11 @@ func Run() error {
 
 	log.Infof("listen at %s", config.Conf.Core.ListenAddress)
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			grpc_auth.UnaryServerInterceptor(AuthInterceptor),
+		)),
+	)
 	reflection.Register(grpcServer)
 	pb.RegisterApiServiceServer(grpcServer, &apiServer{})
 

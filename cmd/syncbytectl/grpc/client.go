@@ -16,10 +16,16 @@ type Client struct {
 }
 
 func NewClient(ctx context.Context) (*Client, error) {
-	var opts []grpc.DialOption
-	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	auth := pb.Authentication{
+		User:     "syncbyte",
+		Password: "123456",
+	}
 
-	conn, err := grpc.Dial(config.Conf.Core.ServerAddress, opts...)
+	conn, err := grpc.Dial(
+		config.Conf.Core.ServerAddress,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithPerRPCCredentials(&auth),
+	)
 	if err != nil {
 		return nil, err
 	}

@@ -1,0 +1,8 @@
+[core]
+grpc_addr = '127.0.0.1:50052'
+log_level = 'debug'
+log_path = 'log'
+
+[storage]
+nas_volume_mountpoint = 'datastor'
+type = 'nas'
