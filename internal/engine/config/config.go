@@ -51,7 +51,7 @@ func InitConfig() {
 	viper.SetDefault("core.mongodb_uri", "mongodb://mongoadmin:123456@127.0.0.1:27017/?maxPoolSize=20&w=majority")
 	viper.SetDefault("core.max_concurrent_num", 64)
 	viper.SetDefault("core.job_scheduler_cron", "* * * * *")
-	viper.SetDefault("core.listen_addr", "0.0.0.0:50051")
+	viper.SetDefault("core.listen_addr", "0.0.0.0:50052")
 	viper.SetDefault("database.type", "postgresql")
 	viper.SetDefault("database.host", "127.0.0.1")
 	viper.SetDefault("database.port", "5432")

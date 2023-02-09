@@ -1,6 +1,7 @@
 package config
 
 import (
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -28,6 +29,11 @@ func InitConfig() {
 		panic(err)
 	}
 
+	confDir := filepath.Join(home, ".config")
+	if _, err = os.Stat(confDir); os.IsNotExist(err){
+		os.MkdirAll(confDir, 0700)
+	}
+
 	fileExt := path.Ext(fileName)
 	fileSuffix := strings.TrimSuffix(fileName, fileExt)
 
@@ -36,7 +42,7 @@ func InitConfig() {
 	viper.SetConfigName(fileSuffix)
 	viper.SetConfigType(fileExt[1:])
 
-	viper.SetDefault("core.server_addr", "127.0.0.1:50051")
+	viper.SetDefault("core.server_addr", "127.0.0.1:50052")
 	viper.SetDefault("core.log_level", "debug")
 
 	if err := viper.ReadInConfig(); err != nil {
