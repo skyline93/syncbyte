@@ -9,3 +9,11 @@ Content-Type: application/json
     "retention": 7
 }
 
+###
+POST http://127.0.0.1:5000/backup/policy/8
+Content-Type: application/json
+
+{
+    "retention": 1,
+    "resource_args": {"backup_path": "/tmp1"}
+}

@@ -20,3 +20,16 @@ def create_policy():
     session.commit()
 
     return {"error": "", "result": {"policy_id": policy.id}}
+
+
+@api.route("/policy/<int:policy_id>", methods=["POST"])
+def update_policy(policy_id):
+    args = request.json
+    session = get_session()
+
+    ctr = BackupPolicyController(session)
+    ctr.update_policy(policy_id, args["retention"], args["resource_args"])
+
+    session.commit()
+
+    return {"error": "", "result": None}

@@ -10,3 +10,10 @@ class BackupPolicyController(object):
         pl = BackupPolicy.add(retention, res.id, session=self.session)
 
         return pl
+
+    def update_policy(self, policy_id, retention=None, resource_args=None):
+        pl = BackupPolicy(policy_id, refresh_from_db=True, session=self.session)
+        pl.update(retention=retention)
+
+        res = pl.get_resource()
+        res.update(args=resource_args)
