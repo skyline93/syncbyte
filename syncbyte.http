@@ -1,0 +1,11 @@
+POST http://127.0.0.1:5000/backup/policy
+Content-Type: application/json
+
+{
+    "resource": {
+        "resource_type": "nas",
+        "args": {"backup_path": "/tmp"}
+    },
+    "retention": 7
+}
+

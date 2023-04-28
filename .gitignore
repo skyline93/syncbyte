@@ -23,3 +23,6 @@ logs
 datastore
 agent.toml
 engine.toml
+.python-version
+__pycache__
+.env
