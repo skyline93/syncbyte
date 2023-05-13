@@ -6,14 +6,28 @@ Content-Type: application/json
         "resource_type": "nas",
         "args": {"backup_path": "/tmp"}
     },
-    "retention": 7
+    "retention": 7,
+    "cron": "* * * * *"
 }
 
 ###
-POST http://127.0.0.1:5000/backup/policy/8
+POST http://127.0.0.1:5000/backup/policy/9
 Content-Type: application/json
 
 {
     "retention": 1,
+    "cron": "*/1 * * * *",
     "resource_args": {"backup_path": "/tmp1"}
 }
+
+###
+POST http://127.0.0.1:5000/backup/policy/9/disable
+Content-Type: application/json
+
+###
+POST http://127.0.0.1:5000/backup/policy/9/enable
+Content-Type: application/json
+
+###
+GET http://127.0.0.1:5000/backup/policy?status=enabled
+Content-Type: application/json
