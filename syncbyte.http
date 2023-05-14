@@ -31,3 +31,11 @@ Content-Type: application/json
 ###
 GET http://127.0.0.1:5000/backup/policy?status=enabled
 Content-Type: application/json
+
+###
+POST http://127.0.0.1:5000/backup/job
+Content-Type: application/json
+
+{
+    "policy_id": 1
+}

@@ -66,6 +66,7 @@ class BackupPolicy(SyncbyteEntity):
 
     def to_json(self):
         return {
+            "id": self.id,
             "resource_id": self.resource_id,
             "retention": self.retention,
         }

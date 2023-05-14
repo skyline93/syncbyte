@@ -3,7 +3,7 @@ from flask import request
 from app.core.database.session import get_session
 
 from . import api
-from .controller import BackupPolicyController
+from .controller import BackupPolicyController, BackupJobController
 
 
 @api.route("/policy", methods=["POST"])
@@ -70,3 +70,16 @@ def get_policy_all():
     session.commit()
 
     return {"error": "", "result": policies}
+
+
+@api.route("/job", methods=["POST"])
+def start_backup_job():
+    args = request.json
+    session = get_session()
+
+    ctr = BackupJobController(session)
+    job = ctr.start_backup_job(args["policy_id"])
+
+    session.commit()
+
+    return {"error": "", "result": {"job_id": job.id}}

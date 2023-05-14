@@ -1,5 +1,6 @@
 from app.core.database import models
 from app.core.policy import BackupPolicy, Resource, BackupSchedule
+from app.core.job.scheduling import schedule_backup_job
 
 
 class BackupPolicyController(object):
@@ -45,3 +46,15 @@ class BackupPolicyController(object):
         ]
 
         return policies
+
+
+class BackupJobController(object):
+    def __init__(self, session):
+        self.session = session
+
+    def start_backup_job(self, policy_id):
+        job = schedule_backup_job(policy_id, session=self.session)
+
+        # TODO start job
+
+        return job

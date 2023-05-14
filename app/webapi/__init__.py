@@ -13,4 +13,4 @@ logger = logging.getLogger(__name__)
 @app.errorhandler(Exception)
 def internal_error(err):
     logger.exception(err)
-    return {"error": err, "result": None}, 500
+    return {"error": str(err), "result": None}, 500
