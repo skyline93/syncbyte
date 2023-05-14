@@ -26,6 +26,13 @@ ipython = "^8.12.0"
 [tool.poetry.group.test.dependencies]
 pytest = "^7.3.1"
 
+
+[[tool.poetry.source]]
+name = "aliyun"
+url = "https://mirrors.aliyun.com/pypi/simple/"
+default = true
+secondary = false
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
