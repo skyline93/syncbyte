@@ -58,7 +58,7 @@ var cmdRun = &cobra.Command{
 		}
 
 		if err := apiserver.Run(); err != nil {
-			log.Error("apiserver run error, err : %v", err)
+			log.Errorf("apiserver run error, err : %v", err)
 			os.Exit(1)
 		}
 	},

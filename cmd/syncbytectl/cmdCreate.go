@@ -76,7 +76,7 @@ func init() {
 
 	bp := cmdBackupPolicy.Flags()
 	bp.IntVarP(&createBackupPolicyOptions.Retention, "retention", "r", 7, "backup set save retention")
-	bp.StringVarP(&createBackupPolicyOptions.ResourceType, "type", "t", "", "resource type")
+	bp.StringVarP(&createBackupPolicyOptions.ResourceType, "type", "t", "", "resource type, example: 'nas'")
 	bp.StringVarP(&createBackupPolicyOptions.ResourceName, "name", "n", "", "resource name")
 	bp.StringVarP(&createBackupPolicyOptions.BackupPath, "backup-path", "p", "", "backup path, only nas resource")
 

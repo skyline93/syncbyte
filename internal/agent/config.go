@@ -52,7 +52,7 @@ func InitConfig() {
 	viper.SetConfigName(fileSuffix)
 	viper.SetConfigType(fileExt[1:])
 
-	viper.SetDefault("core.grpc_addr", "127.0.0.1:50051")
+	viper.SetDefault("core.grpc_addr", "0.0.0.0:50051")
 	viper.SetDefault("core.log_path", "/var/syncbyte/log")
 	viper.SetDefault("core.log_level", "debug")
 	viper.SetDefault("storage.type", "nas")
