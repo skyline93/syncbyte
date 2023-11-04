@@ -1,7 +1,0 @@
-.git/
-logs/
-data/
-
-.gitignore
-*.md
-*.toml
