@@ -1,9 +1,12 @@
 package api
 
 import (
+	"context"
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
+	"github.com/skyline93/ctask"
 	"github.com/skyline93/syncbyte/syncbyte"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -87,5 +90,27 @@ func createBackupJob(c *gin.Context) {
 		return
 	}
 
+	task, err := syncbyte.NewBackupTask(bj.ID, pl.ResourceID, pl.Retention)
+	if err != nil {
+		return
+	}
+
+	sendTask(task)
+
 	log.Printf("job_id: %d", bj.ID)
+}
+
+func sendTask(task *ctask.Task) {
+	client := ctask.NewClient(ctask.NewRDBBroker(context.Background(), &redis.Options{
+		Addr: "localhost:6379",
+		DB:   0,
+	}))
+	defer client.Close()
+
+	info, err := client.Enqueue(context.TODO(), task)
+	if err != nil {
+		log.Fatalf("could not enqueue task: %v", err)
+	}
+
+	log.Printf("enqueued task: id=%s queue=%s", info.ID, info.Queue)
 }

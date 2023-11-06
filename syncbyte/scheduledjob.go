@@ -51,7 +51,7 @@ func GetScheduledJob(db *gorm.DB, jobID int) (*ScheduledJob, error) {
 }
 
 func (j *ScheduledJob) Start(db *gorm.DB) error {
-	if result := db.Where("id = ?", j.ID).Updates(map[string]interface{}{"status": JobStatusRunning, "start_time": time.Now()}); result.Error != nil {
+	if result := db.Model(&ScheduledJob{}).Where("id = ?", j.ID).Updates(map[string]interface{}{"status": JobStatusRunning, "start_time": time.Now()}); result.Error != nil {
 		return result.Error
 	}
 
@@ -59,7 +59,7 @@ func (j *ScheduledJob) Start(db *gorm.DB) error {
 }
 
 func (j *ScheduledJob) Fail(db *gorm.DB, error_message string) error {
-	if result := db.Where("id = ?", j.ID).Updates(map[string]interface{}{"status": JobStatusFailed, "end_time": time.Now(), "error_message": error_message}); result.Error != nil {
+	if result := db.Model(&ScheduledJob{}).Where("id = ?", j.ID).Updates(map[string]interface{}{"status": JobStatusFailed, "end_time": time.Now(), "error_message": error_message}); result.Error != nil {
 		return result.Error
 	}
 
@@ -67,7 +67,7 @@ func (j *ScheduledJob) Fail(db *gorm.DB, error_message string) error {
 }
 
 func (j *ScheduledJob) Success(db *gorm.DB) error {
-	if result := db.Where("id = ?", j.ID).Updates(map[string]interface{}{"status": JobStatusSuccessed, "end_time": time.Now()}); result.Error != nil {
+	if result := db.Model(&ScheduledJob{}).Where("id = ?", j.ID).Updates(map[string]interface{}{"status": JobStatusSuccessed, "end_time": time.Now()}); result.Error != nil {
 		return result.Error
 	}
 

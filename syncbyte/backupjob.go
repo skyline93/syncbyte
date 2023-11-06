@@ -1,14 +1,13 @@
-package job
+package syncbyte
 
 import (
 	"log"
 
-	"github.com/skyline93/syncbyte/syncbyte"
 	"gorm.io/gorm"
 )
 
 type BackupJob struct {
-	syncbyte.ScheduledJob
+	ScheduledJob
 }
 
 func (j *BackupJob) Run(db *gorm.DB, resourceID uint, retention int) (err error) {
@@ -25,9 +24,9 @@ func (j *BackupJob) Run(db *gorm.DB, resourceID uint, retention int) (err error)
 		return err
 	}
 
-	var bset *syncbyte.BackupSet
+	var bset *BackupSet
 	log.Printf("create backup set")
-	bset, err = syncbyte.CreateBackupSet(db, resourceID, retention)
+	bset, err = CreateBackupSet(db, resourceID, retention)
 	if err != nil {
 		return err
 	}
