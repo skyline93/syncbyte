@@ -16,7 +16,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const BaseUri = "/api/v1"
+const (
+	BaseUri       = "/api/v1"
+	OriginalsPath = "."
+)
 
 var (
 	logger *logrus.Logger
@@ -28,6 +31,8 @@ func init() {
 }
 
 func registerRoutes(router *gin.Engine) {
+	WebDAV(OriginalsPath, router.Group("/originals"))
+
 	api.Ping(APIv1)
 }
 
