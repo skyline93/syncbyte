@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"phto/api"
 	"syscall"
 	"time"
 
@@ -15,17 +16,26 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var logger *logrus.Logger
+const BaseUri = "/api/v1"
+
+var (
+	logger *logrus.Logger
+	APIv1  *gin.RouterGroup
+)
 
 func init() {
 	logger = NewLogger("app.log")
 }
 
+func registerRoutes(router *gin.Engine) {
+	api.Ping(APIv1)
+}
+
 func StartServer(ctx context.Context) {
 	router := gin.Default()
-	router.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{"message": "pong"})
-	})
+	APIv1 = router.Group(BaseUri)
+
+	registerRoutes(router)
 
 	tcpSocket := fmt.Sprintf("%s:%d", "0.0.0.0", 5000)
 
