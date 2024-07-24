@@ -18,7 +18,7 @@ import (
 
 const (
 	BaseUri       = "/api/v1"
-	OriginalsPath = "."
+	OriginalsPath = "./originals"
 )
 
 var (
@@ -55,7 +55,7 @@ func StartServer(ctx context.Context) {
 	server := &http.Server{Addr: tcpSocket, Handler: router}
 
 	go func() {
-		if err := server.Serve(listener); err != nil {
+		if err := server.ServeTLS(listener, "server.crt", "server.key"); err != nil {
 			if errors.Is(err, http.ErrServerClosed) {
 				logger.Infof("server: shutdown complete")
 			} else {
