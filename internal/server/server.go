@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"context"
@@ -8,7 +8,9 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"phto/api"
+	"phto/internal/api"
+	"phto/internal/config"
+	"phto/internal/log"
 	"syscall"
 	"time"
 
@@ -27,7 +29,7 @@ var (
 )
 
 func init() {
-	logger = NewLogger("app.log")
+	logger = log.NewLogger("server.log")
 }
 
 func registerRoutes(router *gin.Engine) {
@@ -36,13 +38,13 @@ func registerRoutes(router *gin.Engine) {
 	api.Ping(APIv1)
 }
 
-func StartServer(ctx context.Context) {
+func StartHttp(ctx context.Context, conf *config.Config) {
 	router := gin.Default()
 	APIv1 = router.Group(BaseUri)
 
 	registerRoutes(router)
 
-	tcpSocket := fmt.Sprintf("%s:%d", "0.0.0.0", 5000)
+	tcpSocket := fmt.Sprintf("%s:%d", conf.HttpHost, conf.HttpPort)
 
 	listener, err := net.Listen("tcp", tcpSocket)
 	if err != nil {
@@ -55,7 +57,7 @@ func StartServer(ctx context.Context) {
 	server := &http.Server{Addr: tcpSocket, Handler: router}
 
 	go func() {
-		if err := server.ServeTLS(listener, "server.crt", "server.key"); err != nil {
+		if err := server.ServeTLS(listener, conf.TLSCert, conf.TLSKey); err != nil {
 			if errors.Is(err, http.ErrServerClosed) {
 				logger.Infof("server: shutdown complete")
 			} else {
@@ -72,11 +74,11 @@ func StartServer(ctx context.Context) {
 	}
 }
 
-func main() {
+func Start(conf *config.Config) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	logger.Info("start server")
-	go StartServer(ctx)
+	go StartHttp(ctx, conf)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGUSR1)
