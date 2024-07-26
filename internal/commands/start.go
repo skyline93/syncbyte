@@ -2,6 +2,7 @@ package commands
 
 import (
 	"phto/internal/config"
+	"phto/internal/entity"
 	"phto/internal/server"
 
 	"github.com/urfave/cli"
@@ -43,8 +44,12 @@ func startAction(ctx *cli.Context) error {
 		HttpPort: ctx.Int("port"),
 		TLSCert:  ctx.String("tls-cert"),
 		TLSKey:   ctx.String("tls-key"),
+
+		DbDriver: "postgresql",
+		DbDsn:    "host=192.168.209.130 user=syncbyte password=123456 dbname=syncbyte port=5432 sslmode=disable TimeZone=Asia/Shanghai",
 	}
 
+	entity.InitDb(&conf)
 	server.Start(&conf)
 
 	return nil

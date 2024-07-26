@@ -1,6 +1,10 @@
 package server
 
 import (
+	"encoding/base64"
+	"net/http"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"golang.org/x/net/webdav"
 )
@@ -59,4 +63,39 @@ func WebDAV(dir string, router *gin.RouterGroup) {
 
 	handleRead(handlerFunc)
 	handleWrite(handlerFunc)
+}
+
+var (
+	webDAVUser     = "admin"
+	webDAVPassword = "admin123"
+)
+
+func WebDAVAuth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		auth := c.GetHeader("Authorization")
+		if auth == "" {
+			c.Header("WWW-Authenticate", `Basic realm="Restricted"`)
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+
+		if !checkAuth(auth) {
+			c.AbortWithStatus(http.StatusForbidden)
+			return
+		}
+
+		c.Next()
+	}
+}
+
+func checkAuth(auth string) bool {
+	parts := strings.SplitN(auth, " ", 2)
+	if len(parts) != 2 || parts[0] != "Basic" {
+		return false
+	}
+
+	payload, _ := base64.StdEncoding.DecodeString(parts[1])
+	pair := strings.SplitN(string(payload), ":", 2)
+
+	return len(pair) == 2 && pair[0] == webDAVUser && pair[1] == webDAVPassword
 }
