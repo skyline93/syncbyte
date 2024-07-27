@@ -22,3 +22,6 @@ data
 logs
 datastore
 originals
+*.crt
+*.key
+*.db

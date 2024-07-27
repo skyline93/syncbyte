@@ -1,6 +1,9 @@
 package commands
 
 import (
+	"encoding/json"
+	"fmt"
+	"os"
 	"phto/internal/config"
 	"phto/internal/entity"
 	"phto/internal/server"
@@ -18,8 +21,13 @@ var StartCommand = cli.Command{
 
 var startFlags = []cli.Flag{
 	cli.StringFlag{
+		Name:  "config",
+		Usage: "options from config file",
+	},
+	cli.StringFlag{
 		Name:  "host, H",
 		Usage: "server host",
+		Value: "127.0.0.1",
 	},
 	cli.IntFlag{
 		Name:  "port, p",
@@ -38,15 +46,25 @@ var startFlags = []cli.Flag{
 	},
 }
 
-func startAction(ctx *cli.Context) error {
+func startAction(c *cli.Context) error {
 	conf := config.Config{
-		HttpHost: ctx.String("host"),
-		HttpPort: ctx.Int("port"),
-		TLSCert:  ctx.String("tls-cert"),
-		TLSKey:   ctx.String("tls-key"),
+		HttpHost: c.String("host"),
+		HttpPort: c.Int("port"),
+		TLSCert:  c.String("tls-cert"),
+		TLSKey:   c.String("tls-key"),
+	}
 
-		DbDriver: "postgresql",
-		DbDsn:    "host=192.168.209.130 user=syncbyte password=123456 dbname=syncbyte port=5432 sslmode=disable TimeZone=Asia/Shanghai",
+	configPath := c.String("config")
+
+	if configPath != "" {
+		configData, err := os.ReadFile(configPath)
+		if err != nil {
+			return fmt.Errorf("failed to read config file: %w", err)
+		}
+
+		if err := json.Unmarshal(configData, &conf); err != nil {
+			return fmt.Errorf("failed to parse config file: %w", err)
+		}
 	}
 
 	entity.InitDb(&conf)

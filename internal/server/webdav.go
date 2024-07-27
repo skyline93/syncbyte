@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/base64"
 	"net/http"
+	"phto/internal/entity"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -65,11 +66,6 @@ func WebDAV(dir string, router *gin.RouterGroup) {
 	handleWrite(handlerFunc)
 }
 
-var (
-	webDAVUser     = "admin"
-	webDAVPassword = "admin123"
-)
-
 func WebDAVAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		auth := c.GetHeader("Authorization")
@@ -97,5 +93,15 @@ func checkAuth(auth string) bool {
 	payload, _ := base64.StdEncoding.DecodeString(parts[1])
 	pair := strings.SplitN(string(payload), ":", 2)
 
-	return len(pair) == 2 && pair[0] == webDAVUser && pair[1] == webDAVPassword
+	if len(pair) != 2 {
+		return false
+	}
+
+	user := entity.FindUser(pair[0])
+	if user == nil {
+		logger.Infof("user %s not found", pair[0])
+		return false
+	}
+
+	return user.InvalidPassword(pair[1])
 }

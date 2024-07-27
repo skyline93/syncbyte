@@ -48,12 +48,15 @@ func (g *DbConn) Open() {
 	var dialector gorm.Dialector
 
 	switch g.Driver {
-	case DriverSQLite3:
-		dialector = sqlite.Open(g.Dsn)
 	case DriverMySQL:
 		dialector = mysql.Open(g.Dsn)
 	case DriverPostgreSQL:
 		dialector = postgres.Open(g.Dsn)
+	default:
+		if g.Dsn == "" {
+			g.Dsn = "syncbyte.db"
+		}
+		dialector = sqlite.Open(g.Dsn)
 	}
 
 	db, err := gorm.Open(dialector, &gorm.Config{})
@@ -77,4 +80,12 @@ func InitDb(conf *config.Config) {
 	if err != nil {
 		logger.Errorf("migrate db error, %s", err)
 	}
+}
+
+func Db() *gorm.DB {
+	if dbConn == nil {
+		return nil
+	}
+
+	return dbConn.Db()
 }
