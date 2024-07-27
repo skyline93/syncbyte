@@ -14,6 +14,7 @@ type User struct {
 
 	Name     string `gorm:"size:200;index;"`
 	Password string `gorm:"size:500"`
+	Role     string `gorm:"size:60"`
 }
 
 func (User) TableName() string {
@@ -24,6 +25,14 @@ func (u *User) InvalidPassword(s string) bool {
 	return u.Password == s
 }
 
+func CreateUser(name, password, role string) error {
+	if err := Db().Create(&User{Name: name, Password: password, Role: role}).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func FindUser(name string) *User {
 	result := User{}
 	if err := Db().Where("name = ?", name).First(&result).Error; err != nil {
@@ -31,4 +40,12 @@ func FindUser(name string) *User {
 	}
 
 	return &result
+}
+
+func DeleteUser(name string) error {
+	if err := UnscopedDb().Delete(User{}, "name = ?", name).Error; err != nil {
+		return err
+	}
+
+	return nil
 }

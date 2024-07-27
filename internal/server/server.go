@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"phto/internal/api"
+	"phto/internal/auth"
 	"phto/internal/config"
 	"phto/internal/log"
 	"syscall"
@@ -34,12 +35,17 @@ func init() {
 func registerRoutes(router *gin.Engine, conf *config.Config) {
 	WebDAV(conf.OriginalsPath, router.Group("/originals", WebDAVAuth()))
 
+	api.Login(router)
+	api.Register(router)
+	api.DeleteUser(router)
+
 	api.Ping(APIv1)
 }
 
 func StartHttp(ctx context.Context, conf *config.Config) {
 	router := gin.Default()
-	APIv1 = router.Group(BaseUri)
+
+	APIv1 = router.Group(BaseUri, auth.AuthMiddleware())
 
 	registerRoutes(router, conf)
 

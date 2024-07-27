@@ -89,3 +89,7 @@ func Db() *gorm.DB {
 
 	return dbConn.Db()
 }
+
+func UnscopedDb() *gorm.DB {
+	return Db().Unscoped()
+}
