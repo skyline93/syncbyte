@@ -19,7 +19,7 @@ const (
 )
 
 func GenerateToken(username, role string) (string, int64) {
-	exp := time.Now().Add(time.Hour * 72).Unix()
+	exp := time.Now().Add(time.Hour * 2).Unix()
 
 	claims := jwt.MapClaims{"username": username, "role": role, "exp": exp}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

@@ -109,5 +109,5 @@ func DeleteUser(router *gin.Engine) {
 		c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 	}
 
-	router.POST("/delete/:username", auth.AuthMiddleware(), auth.AdminMiddleware(), handler)
+	router.DELETE("/delete/:username", auth.AuthMiddleware(), auth.AdminMiddleware(), handler)
 }

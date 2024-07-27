@@ -40,6 +40,7 @@ func registerRoutes(router *gin.Engine, conf *config.Config) {
 	api.DeleteUser(router)
 
 	api.Ping(APIv1)
+	api.UploadFile(APIv1)
 }
 
 func StartHttp(ctx context.Context, conf *config.Config) {
