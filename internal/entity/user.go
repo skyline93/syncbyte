@@ -3,6 +3,7 @@ package entity
 import (
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -22,7 +23,7 @@ func (User) TableName() string {
 }
 
 func (u *User) InvalidPassword(s string) bool {
-	return u.Password == s
+	return bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(s)) == nil
 }
 
 func CreateUser(name, password, role string) error {

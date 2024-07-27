@@ -27,7 +27,7 @@ func Login(router *gin.Engine) {
 			return
 		}
 
-		if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(json.Password)) != nil {
+		if !user.InvalidPassword(json.Password) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication failed"})
 			return
 		} else {
