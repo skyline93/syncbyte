@@ -19,8 +19,7 @@ import (
 )
 
 const (
-	BaseUri       = "/api/v1"
-	OriginalsPath = "./originals"
+	BaseUri = "/api/v1"
 )
 
 var (
@@ -32,8 +31,8 @@ func init() {
 	logger = log.NewLogger("server.log")
 }
 
-func registerRoutes(router *gin.Engine) {
-	WebDAV(OriginalsPath, router.Group("/originals", WebDAVAuth()))
+func registerRoutes(router *gin.Engine, conf *config.Config) {
+	WebDAV(conf.OriginalsPath, router.Group("/originals", WebDAVAuth()))
 
 	api.Ping(APIv1)
 }
@@ -42,7 +41,7 @@ func StartHttp(ctx context.Context, conf *config.Config) {
 	router := gin.Default()
 	APIv1 = router.Group(BaseUri)
 
-	registerRoutes(router)
+	registerRoutes(router, conf)
 
 	tcpSocket := fmt.Sprintf("%s:%d", conf.HttpHost, conf.HttpPort)
 

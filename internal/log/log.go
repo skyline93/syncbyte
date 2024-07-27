@@ -1,6 +1,7 @@
 package log
 
 import (
+	"path/filepath"
 	"sync"
 
 	"github.com/sirupsen/logrus"
@@ -25,6 +26,8 @@ func init() {
 func NewLogger(logPath string) *logrus.Logger {
 	logMutex.Lock()
 	defer logMutex.Unlock()
+
+	logPath = filepath.Join("logs", logPath)
 
 	for _, log := range loggers {
 		if log.Out.(*lumberjack.Logger).Filename == logPath {
