@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"phto/internal/config"
 	"phto/internal/entity"
+	"phto/internal/syncbyte"
 	"strconv"
 	"strings"
 	"time"
@@ -82,4 +83,23 @@ func UploadPhoto(router *gin.RouterGroup, conf *config.Config) {
 
 func generateUniqueFilename(originalFilename string) string {
 	return originalFilename + "_" + time.Now().Format("2006-01-02_15-04-05")
+}
+
+func ImportPhoto(router *gin.RouterGroup, conf *config.Config) {
+	handler := func(c *gin.Context) {
+		username, exists := c.Get("username")
+		if !exists {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "User context not found"})
+			return
+		}
+
+		if err := syncbyte.ImportOriginals(username.(string), conf); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to import photo"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "import successfully"})
+	}
+
+	router.POST("/photo/import", handler)
 }

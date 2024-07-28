@@ -57,16 +57,6 @@ func (s *Album) Create(name string, userID uint) (*Album, error) {
 	return album, nil
 }
 
-func FindAlbumsAll() ([]*Album, error) {
-	var albums []*Album
-
-	if err := Db().Find(&albums).Error; err != nil {
-		return nil, err
-	}
-
-	return albums, nil
-}
-
 func FindAlbumByID(id uint) (*Album, error) {
 	var album Album
 
@@ -78,7 +68,7 @@ func FindAlbumByID(id uint) (*Album, error) {
 }
 
 func (s *Album) Update(name string) error {
-	if err := Db().Model(&Album{}).Update("name", name).Error; err != nil {
+	if err := Db().Model(&Album{}).Where("id = ?", s.ID).Update("name", name).Error; err != nil {
 		return err
 	}
 

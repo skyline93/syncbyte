@@ -37,7 +37,7 @@ func CreateUser(name, password, role string) error {
 
 func FindUser(name string) *User {
 	result := User{}
-	if err := Db().Where("name = ?", name).First(&result).Error; err != nil {
+	if err := Db().Where("name = ?", name).Preload("Albums").First(&result).Error; err != nil {
 		return nil
 	}
 
