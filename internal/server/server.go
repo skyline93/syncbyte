@@ -33,7 +33,8 @@ func init() {
 }
 
 func registerRoutes(router *gin.Engine, conf *config.Config) {
-	WebDAV(conf, router.Group("/originals", WebDAVAuth()))
+	WebDAVOriginals(conf, router.Group("/webdav/originals", WebDAVAuth()))
+	WebDAVUser(conf, router.Group("/webdav/user", WebDAVAuth()))
 
 	api.Login(router)
 	api.Register(router)

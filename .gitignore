@@ -21,8 +21,7 @@ output
 data
 logs
 datastore
-originals
+storage
 *.crt
 *.key
 *.db
-uploads

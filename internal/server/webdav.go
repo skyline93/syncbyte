@@ -33,10 +33,33 @@ var WebDAVHandler = func(c *gin.Context, router *gin.RouterGroup, srv *webdav.Ha
 	srv.ServeHTTP(c.Writer, c.Request)
 }
 
-func WebDAV(conf *config.Config, router *gin.RouterGroup) {
+func WebDAVOriginals(conf *config.Config, router *gin.RouterGroup) {
 	srv := &webdav.Handler{
 		Prefix:     router.BasePath(),
 		FileSystem: webdav.Dir(filepath.Join(conf.StoragePath, "originals")),
+		LockSystem: webdav.NewMemLS(),
+	}
+
+	handlerFunc := func(c *gin.Context) {
+		WebDAVHandler(c, router, srv)
+	}
+
+	handleRead := func(h func(*gin.Context)) {
+		router.Handle(MethodHead, "/*path", h)
+		router.Handle(MethodGet, "/*path", h)
+		router.Handle(MethodOptions, "/*path", h)
+		router.Handle(MethodLock, "/*path", h)
+		router.Handle(MethodUnlock, "/*path", h)
+		router.Handle(MethodPropfind, "/*path", h)
+	}
+
+	handleRead(handlerFunc)
+}
+
+func WebDAVUser(conf *config.Config, router *gin.RouterGroup) {
+	srv := &webdav.Handler{
+		Prefix:     router.BasePath(),
+		FileSystem: webdav.Dir(filepath.Join(conf.StoragePath, "user")),
 		LockSystem: webdav.NewMemLS(),
 	}
 
@@ -65,6 +88,7 @@ func WebDAV(conf *config.Config, router *gin.RouterGroup) {
 	}
 
 	handleRead(handlerFunc)
+
 	handleWrite(handlerFunc)
 }
 
