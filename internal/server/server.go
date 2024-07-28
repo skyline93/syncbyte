@@ -41,6 +41,9 @@ func registerRoutes(router *gin.Engine, conf *config.Config) {
 
 	api.Ping(APIv1)
 	api.UploadFile(APIv1, conf)
+	api.UploadPhoto(APIv1, conf)
+
+	api.CreateAlbum(APIv1, conf)
 }
 
 func StartHttp(ctx context.Context, conf *config.Config) {

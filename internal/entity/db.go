@@ -76,9 +76,11 @@ func InitDb(conf *config.Config) {
 	logger.Infof("start auto migrate")
 	err := dbConn.Db().AutoMigrate(
 		&User{},
+		&Album{},
+		&Photo{},
 	)
 	if err != nil {
-		logger.Errorf("migrate db error, %s", err)
+		logger.Fatalf("migrate db error, %s", err)
 	}
 }
 

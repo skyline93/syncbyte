@@ -13,9 +13,10 @@ type User struct {
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 
-	Name     string `gorm:"size:200;index;"`
-	Password string `gorm:"size:500"`
-	Role     string `gorm:"size:60"`
+	Name     string  `gorm:"size:200;index;"`
+	Password string  `gorm:"size:500"`
+	Role     string  `gorm:"size:60"`
+	Albums   []Album `gorm:"many2many:users_albums;" yaml:"-"`
 }
 
 func (User) TableName() string {
