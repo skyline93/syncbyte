@@ -4,11 +4,12 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"phto/internal/config"
 
 	"github.com/gin-gonic/gin"
 )
 
-func UploadFile(router *gin.RouterGroup) {
+func UploadFile(router *gin.RouterGroup, conf *config.Config) {
 	handler := func(c *gin.Context) {
 		username, exists := c.Get("username")
 		if !exists {
@@ -22,7 +23,7 @@ func UploadFile(router *gin.RouterGroup) {
 			return
 		}
 
-		userDir := filepath.Join("uploads", username.(string))
+		userDir := filepath.Join(conf.StoragePath, "uploads", username.(string))
 		if _, err := os.Stat(userDir); os.IsNotExist(err) {
 			err := os.MkdirAll(userDir, os.ModePerm)
 			if err != nil {

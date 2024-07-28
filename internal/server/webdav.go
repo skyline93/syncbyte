@@ -3,6 +3,8 @@ package server
 import (
 	"encoding/base64"
 	"net/http"
+	"path/filepath"
+	"phto/internal/config"
 	"phto/internal/entity"
 	"strings"
 
@@ -31,10 +33,10 @@ var WebDAVHandler = func(c *gin.Context, router *gin.RouterGroup, srv *webdav.Ha
 	srv.ServeHTTP(c.Writer, c.Request)
 }
 
-func WebDAV(dir string, router *gin.RouterGroup) {
+func WebDAV(conf *config.Config, router *gin.RouterGroup) {
 	srv := &webdav.Handler{
 		Prefix:     router.BasePath(),
-		FileSystem: webdav.Dir(dir),
+		FileSystem: webdav.Dir(filepath.Join(conf.StoragePath, "originals")),
 		LockSystem: webdav.NewMemLS(),
 	}
 

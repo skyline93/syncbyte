@@ -9,5 +9,5 @@ type Config struct {
 	DbDriver string `json:"db_driver"`
 	DbDsn    string `json:"db_dsn"`
 
-	OriginalsPath string `json:"originals_path"`
+	StoragePath string `json:"storage_path"`
 }
