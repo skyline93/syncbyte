@@ -2,7 +2,10 @@ package server
 
 import (
 	"encoding/base64"
+	"errors"
+	"fmt"
 	"net/http"
+	"os"
 	"path/filepath"
 	"phto/internal/config"
 	"phto/internal/entity"
@@ -29,19 +32,36 @@ const (
 	MethodProppatch = "PROPPATCH"
 )
 
-var WebDAVHandler = func(c *gin.Context, router *gin.RouterGroup, srv *webdav.Handler) {
+var WebDAVHandler = func(c *gin.Context, router *gin.RouterGroup, conf *config.Config, isOnlyRead bool) {
+	var webDAVDir string
+	username, _ := c.Get("username")
+
+	if isOnlyRead {
+		webDAVDir = filepath.Join(conf.StoragePath, "originals", username.(string))
+	} else {
+		webDAVDir = filepath.Join(conf.StoragePath, "user", username.(string))
+	}
+
+	if _, err := os.Stat(webDAVDir); os.IsNotExist(err) {
+		err := os.MkdirAll(webDAVDir, os.ModePerm)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create user directory"})
+			return
+		}
+	}
+
+	srv := &webdav.Handler{
+		Prefix:     fmt.Sprintf("%s/%s", router.BasePath(), username),
+		FileSystem: webdav.Dir(webDAVDir),
+		LockSystem: webdav.NewMemLS(),
+	}
+
 	srv.ServeHTTP(c.Writer, c.Request)
 }
 
 func WebDAVOriginals(conf *config.Config, router *gin.RouterGroup) {
-	srv := &webdav.Handler{
-		Prefix:     router.BasePath(),
-		FileSystem: webdav.Dir(filepath.Join(conf.StoragePath, "originals")),
-		LockSystem: webdav.NewMemLS(),
-	}
-
 	handlerFunc := func(c *gin.Context) {
-		WebDAVHandler(c, router, srv)
+		WebDAVHandler(c, router, conf, true)
 	}
 
 	handleRead := func(h func(*gin.Context)) {
@@ -57,14 +77,8 @@ func WebDAVOriginals(conf *config.Config, router *gin.RouterGroup) {
 }
 
 func WebDAVUser(conf *config.Config, router *gin.RouterGroup) {
-	srv := &webdav.Handler{
-		Prefix:     router.BasePath(),
-		FileSystem: webdav.Dir(filepath.Join(conf.StoragePath, "user")),
-		LockSystem: webdav.NewMemLS(),
-	}
-
 	handlerFunc := func(c *gin.Context) {
-		WebDAVHandler(c, router, srv)
+		WebDAVHandler(c, router, conf, false)
 	}
 
 	handleRead := func(h func(*gin.Context)) {
@@ -101,33 +115,45 @@ func WebDAVAuth() gin.HandlerFunc {
 			return
 		}
 
-		if !checkAuth(auth) {
+		username, password, err := parseUser(auth)
+		if err != nil {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+
+		if !checkAuth(username, password) {
+			logger.Infof("check auth failed, username: %s, password: %s", username, password)
 			c.AbortWithStatus(http.StatusForbidden)
 			return
 		}
 
+		c.Set("username", username)
 		c.Next()
 	}
 }
 
-func checkAuth(auth string) bool {
+func parseUser(auth string) (string, string, error) {
 	parts := strings.SplitN(auth, " ", 2)
 	if len(parts) != 2 || parts[0] != "Basic" {
-		return false
+		return "", "", errors.New("parse auth failed")
 	}
 
 	payload, _ := base64.StdEncoding.DecodeString(parts[1])
 	pair := strings.SplitN(string(payload), ":", 2)
 
 	if len(pair) != 2 {
-		return false
+		return "", "", errors.New("parse auth failed")
 	}
 
-	user := entity.FindUser(pair[0])
+	return pair[0], pair[1], nil
+}
+
+func checkAuth(username, password string) bool {
+	user := entity.FindUser(username)
 	if user == nil {
-		logger.Infof("user %s not found", pair[0])
+		logger.Infof("user %s not found", username)
 		return false
 	}
 
-	return user.InvalidPassword(pair[1])
+	return user.InvalidPassword(password)
 }
