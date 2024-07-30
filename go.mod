@@ -3,9 +3,11 @@ module phto
 go 1.21
 
 require (
+	github.com/fsnotify/fsnotify v1.7.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/sirupsen/logrus v1.9.3
+	github.com/studio-b12/gowebdav v0.9.0
 	github.com/urfave/cli v1.22.15
 	golang.org/x/crypto v0.23.0
 	golang.org/x/net v0.25.0
@@ -22,7 +24,6 @@ require (
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
-	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
