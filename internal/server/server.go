@@ -68,7 +68,14 @@ func StartHttp(ctx context.Context, conf *config.Config) {
 	server := &http.Server{Addr: tcpSocket, Handler: router}
 
 	go func() {
-		if err := server.ServeTLS(listener, conf.TLSCert, conf.TLSKey); err != nil {
+		var err error
+		if conf.UseTLS {
+			err = server.ServeTLS(listener, conf.TLSCert, conf.TLSKey)
+		} else {
+			err = server.Serve(listener)
+		}
+
+		if err != nil {
 			if errors.Is(err, http.ErrServerClosed) {
 				logger.Infof("server: shutdown complete")
 			} else {
