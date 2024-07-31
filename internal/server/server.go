@@ -17,6 +17,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 const (
@@ -33,6 +35,8 @@ func init() {
 }
 
 func registerRoutes(router *gin.Engine, conf *config.Config) {
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	WebDAVOriginals(conf, router.Group("/webdav/originals", WebDAVAuth()))
 	WebDAVUser(conf, router.Group("/webdav/user", WebDAVAuth()))
 

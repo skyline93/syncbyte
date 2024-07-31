@@ -9,12 +9,23 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type UserLoginRequest struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+// Login godoc
+//
+//	@Summary		Login user
+//	@Description	login user
+//	@Tags			accounts
+//	@Accept			json
+//	@Produce		json
+//	@Param			user	body	UserLoginRequest	true	"user info"
+//	@Router			/login [post]
 func Login(router *gin.Engine) {
 	handler := func(c *gin.Context) {
-		var json struct {
-			Username string `json:"username" binding:"required"`
-			Password string `json:"password" binding:"required"`
-		}
+		var json UserLoginRequest
 
 		if c.Bind(&json) != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
@@ -39,13 +50,24 @@ func Login(router *gin.Engine) {
 	router.POST("/login", handler)
 }
 
+type RegisterUserRequest struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+	Role     string `json:"role"`
+}
+
+// Register godoc
+//
+//	@Summary		Register user
+//	@Description	register user
+//	@Tags			accounts
+//	@Accept			json
+//	@Produce		json
+//	@Param			user	body	RegisterUserRequest	true	"user info"
+//	@Router			/register [post]
 func Register(router *gin.Engine) {
 	handler := func(c *gin.Context) {
-		var json struct {
-			Username string `json:"username" binding:"required"`
-			Password string `json:"password" binding:"required"`
-			Role     string `json:"role"`
-		}
+		var json RegisterUserRequest
 
 		if c.Bind(&json) != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
@@ -80,6 +102,15 @@ func Register(router *gin.Engine) {
 	router.POST("/register", handler)
 }
 
+// DeleteUser godoc
+//
+//	@Summary		Delete user
+//	@Description	delete user
+//	@Tags			accounts
+//	@Accept			json
+//	@Produce		json
+//	@Param			username	path	string	true	"User Name"
+//	@Router			/delete/:username [delete]
 func DeleteUser(router *gin.Engine) {
 	handler := func(c *gin.Context) {
 		usernameToDelete := c.Param("username")

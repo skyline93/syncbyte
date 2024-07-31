@@ -1,0 +1,98 @@
+basePath: /
+definitions:
+  api.RegisterUserRequest:
+    properties:
+      password:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  api.UserLoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+externalDocs:
+  description: OpenAPI
+  url: https://swagger.io/resources/open-api/
+host: 192.168.209.130:8000
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a sample server celler server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Syncbyte API
+  version: "1.0"
+paths:
+  /delete/:username:
+    delete:
+      consumes:
+      - application/json
+      description: delete user
+      parameters:
+      - description: User Name
+        in: path
+        name: username
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      summary: Delete user
+      tags:
+      - accounts
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: login user
+      parameters:
+      - description: user info
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/api.UserLoginRequest'
+      produces:
+      - application/json
+      responses: {}
+      summary: Login user
+      tags:
+      - accounts
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: register user
+      parameters:
+      - description: user info
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/api.RegisterUserRequest'
+      produces:
+      - application/json
+      responses: {}
+      summary: Register user
+      tags:
+      - accounts
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"
