@@ -25,3 +25,6 @@ storage
 *.crt
 *.key
 *.db
+/syncbyte
+/syncbyte-*
+/config.json
