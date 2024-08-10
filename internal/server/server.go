@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	swaggerFiles "github.com/swaggo/files"
@@ -57,7 +58,12 @@ func registerRoutes(router *gin.Engine, conf *config.Config) {
 
 func StartHttp(ctx context.Context, conf *config.Config) {
 	router := gin.Default()
-	router.Use(api.ErrorHandler())
+	router.Use(api.ErrorHandler(), cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},                                                 // 允许访问的来源域名
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},           // 允许的请求方法
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"}, // 允许的请求头
+		AllowCredentials: true,                                                          // 允许携带凭证（如 Cookies）
+	}))
 
 	APIv1 = router.Group(BaseUri, auth.AuthMiddleware())
 
