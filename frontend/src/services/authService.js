@@ -1,7 +1,7 @@
 // src/services/authService.js
 import axios from 'axios';
 
-const API_URL = 'http://127.0.0.1:8000';
+const API_URL = 'http://192.168.209.130:8000';
 
 export const login = async (username, password) => {
   try {
@@ -12,7 +12,7 @@ export const login = async (username, password) => {
       headers: { 'Content-Type': 'application/json' }
     });
 
-    const { token } = response.data.data;
+    const { token } = response.data.token;
     localStorage.setItem('authToken', token); // 保存令牌到本地存储
     return token;
   } catch (error) {

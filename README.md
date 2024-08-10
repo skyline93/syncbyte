@@ -3,6 +3,18 @@
 ## Getting started
 
 ```bash
+sudo apt-get update
+sudo apt install libvips libvips-dev
+export CGO_ENABLED='1'
+```
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+```bash
 go install github.com/swaggo/swag/cmd/swag@latest
 ```
 
