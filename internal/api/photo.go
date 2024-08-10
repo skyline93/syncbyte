@@ -3,14 +3,12 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"path/filepath"
 	"phto/internal/config"
 	"phto/internal/entity"
 	"phto/internal/syncbyte"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,6 +21,8 @@ func UploadPhoto(router *gin.RouterGroup, conf *config.Config) {
 			return
 		}
 
+		user := entity.FindUser(username.(string))
+
 		albumIDStr := c.PostForm("album_id")
 		if albumIDStr == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Album ID is required"})
@@ -34,8 +34,15 @@ func UploadPhoto(router *gin.RouterGroup, conf *config.Config) {
 			return
 		}
 
-		album, err := entity.FindAlbumByID(uint(albumID))
-		if err != nil {
+		var album *entity.Album
+		for _, alb := range user.Albums {
+			if alb.ID == uint(albumID) {
+				album = &alb
+				break
+			}
+		}
+
+		if album == nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid album ID"})
 			return
 		}
@@ -46,27 +53,25 @@ func UploadPhoto(router *gin.RouterGroup, conf *config.Config) {
 			return
 		}
 
-		filename := generateUniqueFilename(file.Filename)
-
-		userDir := filepath.Join(conf.StoragePath, "uploads", username.(string), album.Name)
-		if _, err := os.Stat(userDir); os.IsNotExist(err) {
-			err := os.MkdirAll(userDir, os.ModePerm)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create user directory"})
-				return
-			}
-		}
-
-		if err := c.SaveUploadedFile(file, filepath.Join(userDir, filename)); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
-			return
-		}
+		uniqueFileName := syncbyte.GenerateUniqueFilename(file.Filename)
 
 		photo := &entity.Photo{
 			Name:     filepath.Base(file.Filename),
-			FileName: filepath.Base(filename),
+			FileName: filepath.Base(uniqueFileName),
 			FileSize: file.Size,
 			FileType: strings.Split(file.Header.Get("Content-Type"), ";")[0],
+		}
+
+		src, err := file.Open()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "open src file failed"})
+			return
+		}
+		defer src.Close()
+
+		if err := syncbyte.UploadPhoto(username.(string), album.Name, uniqueFileName, src, conf); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+			return
 		}
 
 		pho, err := photo.Create(uint(albumID))
@@ -81,10 +86,6 @@ func UploadPhoto(router *gin.RouterGroup, conf *config.Config) {
 	router.POST("/photo/upload", handler)
 }
 
-func generateUniqueFilename(originalFilename string) string {
-	return originalFilename + "_" + time.Now().Format("2006-01-02_15-04-05")
-}
-
 func ImportPhoto(router *gin.RouterGroup, conf *config.Config) {
 	handler := func(c *gin.Context) {
 		username, exists := c.Get("username")
@@ -94,6 +95,11 @@ func ImportPhoto(router *gin.RouterGroup, conf *config.Config) {
 		}
 
 		if err := syncbyte.ImportOriginals(username.(string), conf); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to import photo"})
+			return
+		}
+
+		if err := syncbyte.ImportOriginalsFromWebDAV(username.(string), conf); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to import photo"})
 			return
 		}

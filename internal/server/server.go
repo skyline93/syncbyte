@@ -50,6 +50,7 @@ func registerRoutes(router *gin.Engine, conf *config.Config) {
 	api.ImportPhoto(APIv1, conf)
 
 	api.CreateAlbum(APIv1, conf)
+	api.GetAlbums(APIv1, conf)
 }
 
 func StartHttp(ctx context.Context, conf *config.Config) {

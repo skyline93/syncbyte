@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -21,13 +22,21 @@ func (Album) TableName() string {
 	return "albums"
 }
 
-func ExistsAlbum(name string) bool {
-	result := Album{}
-	if err := Db().Where("name = ?", name).First(&result).Error; err != nil {
+func ExistsAlbum(name string, userName string) bool {
+	var user User
+
+	err := Db().Model(&User{}).Where("name = ?", userName).Preload("Albums").First(&user).Error
+	if err != nil {
 		return false
 	}
 
-	return true
+	for _, album := range user.Albums {
+		if album.Name == name {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (s *Album) Create(name string, userID uint) (*Album, error) {
@@ -81,4 +90,32 @@ func (s *Album) Delete(id uint) error {
 	}
 
 	return nil
+}
+
+func ListAlbumsByUserID(userID uint) ([]Album, error) {
+	var user User
+
+	err := Db().Model(&User{}).Where("id = ?", userID).Preload("Albums").First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return user.Albums, err
+}
+
+func GetDefaultAlbum(userName string) (*Album, error) {
+	var user User
+
+	err := Db().Model(&User{}).Where("name = ?", userName).Preload("Albums").First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	for _, album := range user.Albums {
+		if album.Name == "default" {
+			return &album, nil
+		}
+	}
+
+	return nil, fmt.Errorf("default album is not exists")
 }

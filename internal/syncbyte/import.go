@@ -1,11 +1,14 @@
 package syncbyte
 
 import (
+	"fmt"
+	"mime"
 	"os"
 	"path/filepath"
 	"phto/internal/config"
 	"phto/internal/entity"
 	"phto/internal/log"
+	"sync"
 
 	"github.com/sirupsen/logrus"
 )
@@ -47,6 +50,7 @@ func ImportOriginals(userName string, conf *config.Config) error {
 				continue
 			}
 
+			logger.Debugf("set photo %d to imported", photo.ID)
 			if err := photo.SetIsImported(true); err != nil {
 				logger.Debugf("set is imported failed, err : %s", err)
 				continue
@@ -55,4 +59,87 @@ func ImportOriginals(userName string, conf *config.Config) error {
 	}
 
 	return nil
+}
+
+func ImportOriginalsFromWebDAV(userName string, conf *config.Config) error {
+	fileChan := make(chan FileInfoWrapper)
+	webDAVDir := filepath.Join(conf.StoragePath, "user", userName)
+
+	album, err := entity.GetDefaultAlbum(userName)
+	if err != nil {
+		return err
+	}
+
+	go walkDir(webDAVDir, fileChan)
+
+	var wg sync.WaitGroup
+	for fileInfo := range fileChan {
+		wg.Add(1)
+
+		go func(fileInfo FileInfoWrapper) {
+			defer wg.Done()
+
+			contentType := mime.TypeByExtension(filepath.Ext(fileInfo.Path))
+			uniqueFileName := GenerateUniqueFilename(fileInfo.Info.Name())
+
+			originalsPath := filepath.Join(conf.StoragePath, "originals", userName, album.Name)
+			if _, err := os.Stat(originalsPath); os.IsNotExist(err) {
+				err := os.MkdirAll(originalsPath, os.ModePerm)
+				if err != nil {
+					return
+				}
+			}
+
+			photo := &entity.Photo{
+				Name:     filepath.Base(fileInfo.Info.Name()),
+				FileName: filepath.Base(uniqueFileName),
+				FileSize: fileInfo.Info.Size(),
+				FileType: contentType,
+			}
+
+			destPath := filepath.Join(originalsPath, photo.FileName)
+
+			logger.Debugf("rename %s to %s", fileInfo.Path, destPath)
+			if err := os.Rename(fileInfo.Path, destPath); err != nil {
+				logger.Debugf("rename failed, err: %s", err)
+				return
+			}
+
+			pho, err := photo.Create(album.ID)
+			if err != nil {
+				return
+			}
+
+			if err := pho.SetIsImported(true); err != nil {
+				logger.Debugf("set is imported failed, err : %s", err)
+				return
+			}
+		}(fileInfo)
+	}
+
+	wg.Wait()
+	return nil
+}
+
+type FileInfoWrapper struct {
+	Path string
+	Info os.FileInfo
+}
+
+func walkDir(dirPath string, fileChan chan<- FileInfoWrapper) {
+	defer close(fileChan)
+
+	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			fileChan <- FileInfoWrapper{Path: path, Info: info}
+		}
+		return nil
+	})
+
+	if err != nil {
+		fmt.Println("Failed to walk the directory:", err)
+	}
 }

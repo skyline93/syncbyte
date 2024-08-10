@@ -32,7 +32,7 @@ func CreateAlbum(router *gin.RouterGroup, conf *config.Config) {
 			return
 		}
 
-		if entity.ExistsAlbum(json.AlbumName) {
+		if entity.ExistsAlbum(json.AlbumName, user.Name) {
 			c.JSON(http.StatusConflict, gin.H{"error": "Album already exists"})
 			return
 		}
@@ -48,4 +48,30 @@ func CreateAlbum(router *gin.RouterGroup, conf *config.Config) {
 	}
 
 	router.POST("/albums", handler)
+}
+
+func GetAlbums(router *gin.RouterGroup, conf *config.Config) {
+	handler := func(c *gin.Context) {
+		username, exists := c.Get("username")
+		if !exists {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "User context not found"})
+			return
+		}
+
+		user := entity.FindUser(username.(string))
+		if user == nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
+			return
+		}
+
+		albums, err := entity.ListAlbumsByUserID(user.ID)
+		if err != nil {
+			c.JSON(http.StatusConflict, gin.H{"error": "Albums get failed"})
+			return
+		}
+
+		c.JSON(http.StatusOK, albums)
+	}
+
+	router.GET("/albums", handler)
 }
