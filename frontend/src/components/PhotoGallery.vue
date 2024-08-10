@@ -4,7 +4,7 @@
     <div v-if="loading" class="loading">加载中...</div>
     <div v-else>
       <div v-for="(image, index) in images" :key="index" class="gallery-item">
-        <img :src="image.url" :alt="image.alt" />
+        <img :src="image.link" :alt="image.file_name" />
       </div>
     </div>
   </div>
@@ -19,7 +19,7 @@ const loading = ref(true);
 
 const fetchImages = async () => {
   try {
-    const response = await axios.get('https://your-api-endpoint.com/images');
+    const response = await axios.get('http://localhost:8000/api/v1/photo?album_id=2');
     images.value = response.data;
   } catch (error) {
     console.error('Error fetching images:', error);
