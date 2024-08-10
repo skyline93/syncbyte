@@ -1,8 +1,11 @@
 package api
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"net/http"
+	"os"
 	"path/filepath"
 	"phto/internal/config"
 	"phto/internal/entity"
@@ -173,8 +176,35 @@ func ListPhotos(router *gin.RouterGroup, conf *config.Config) {
 			return
 		}
 
+		for i := range photos {
+			link := router.BasePath() + fmt.Sprintf("/photo/thumbnail/%s/%s.jpg", filepath.Join(user.Name, album.Name), photos[i].FileName)
+			photos[i].Link = link
+		}
+
 		c.JSON(http.StatusOK, Success(photos))
 	}
 
 	router.GET("/photo", handler)
+}
+
+func GetPhotoFile(router *gin.RouterGroup, conf *config.Config) {
+	handler := func(c *gin.Context) {
+		path := c.Param("path")
+
+		file, err := os.ReadFile(filepath.Join(conf.StoragePath, "thumbnails", path))
+		if err != nil {
+			if errors.Is(err, fs.ErrNotExist) {
+				c.JSON(http.StatusNotFound, Error(400, "File not found"))
+				return
+			}
+			c.JSON(http.StatusInternalServerError, Error(400, "Internal server error"))
+			return
+		}
+
+		contentType := http.DetectContentType(file)
+
+		c.Data(http.StatusOK, contentType, file)
+	}
+
+	router.GET("/photo/thumbnail/*path", handler)
 }

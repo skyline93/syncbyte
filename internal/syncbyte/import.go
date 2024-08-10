@@ -55,6 +55,20 @@ func ImportOriginals(userName string, conf *config.Config) error {
 				logger.Debugf("set is imported failed, err : %s", err)
 				continue
 			}
+
+			thumbnailsPath := filepath.Join(conf.StoragePath, "thumbnails", userName, album.Name)
+			if _, err := os.Stat(thumbnailsPath); os.IsNotExist(err) {
+				err := os.MkdirAll(thumbnailsPath, os.ModePerm)
+				if err != nil {
+					continue
+				}
+			}
+
+			thumbnailPath := filepath.Join(thumbnailsPath, fmt.Sprintf("%s.jpg", photo.FileName))
+			if err = CreateThumbnail(destPath, thumbnailPath); err != nil {
+				logger.Debugf("create thumbnail failed, err: %s", err)
+				continue
+			}
 		}
 	}
 
@@ -116,6 +130,20 @@ func ImportOriginalsFromWebDAV(userName string, conf *config.Config) error {
 
 			if err := pho.SetIsImported(true); err != nil {
 				logger.Debugf("set is imported failed, err : %s", err)
+				return
+			}
+
+			thumbnailsPath := filepath.Join(conf.StoragePath, "thumbnails", userName, album.Name)
+			if _, err := os.Stat(thumbnailsPath); os.IsNotExist(err) {
+				err := os.MkdirAll(thumbnailsPath, os.ModePerm)
+				if err != nil {
+					return
+				}
+			}
+
+			thumbnailPath := filepath.Join(thumbnailsPath, fmt.Sprintf("%s.jpg", photo.FileName))
+			if err = CreateThumbnail(destPath, thumbnailPath); err != nil {
+				logger.Debugf("create thumbnail failed, err: %s", err)
 				return
 			}
 		}(fileInfo)

@@ -23,6 +23,8 @@ type Photo struct {
 	UserID  uint    `json:"user_id"`
 	AlbumID uint    `json:"album_id"`
 	Albums  []Album `gorm:"many2many:photos_albums;" json:"-"`
+
+	Link string `gorm:"-" json:"link"`
 }
 
 func (Photo) TableName() string {

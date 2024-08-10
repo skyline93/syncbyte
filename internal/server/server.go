@@ -49,6 +49,7 @@ func registerRoutes(router *gin.Engine, conf *config.Config) {
 	api.UploadPhoto(APIv1, conf)
 	api.ImportPhoto(APIv1, conf)
 	api.ListPhotos(APIv1, conf)
+	api.GetPhotoFile(APIv1, conf)
 
 	api.CreateAlbum(APIv1, conf)
 	api.ListAlbums(APIv1, conf)
