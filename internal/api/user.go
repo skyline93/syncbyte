@@ -14,6 +14,11 @@ type UserLoginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type UserLoginResponse struct {
+	Token      string `json:"token"`
+	Expiration int64  `json:"expiration"`
+}
+
 // Login godoc
 //
 //	@Summary		Login user
@@ -28,22 +33,22 @@ func Login(router *gin.Engine) {
 		var json UserLoginRequest
 
 		if c.Bind(&json) != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+			c.JSON(http.StatusBadRequest, Error(400, "Invalid request"))
 			return
 		}
 
 		user := entity.FindUser(json.Username)
 		if user == nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
+			c.JSON(http.StatusUnauthorized, Error(400, "user not found"))
 			return
 		}
 
 		if !user.InvalidPassword(json.Password) {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication failed"})
+			c.JSON(http.StatusUnauthorized, Error(400, "Authentication failed"))
 			return
 		} else {
 			token, exp := auth.GenerateToken(json.Username, user.Role)
-			c.JSON(http.StatusOK, gin.H{"token": token, "exp": exp})
+			c.JSON(http.StatusOK, Success(UserLoginResponse{Token: token, Expiration: exp}))
 		}
 	}
 
@@ -70,19 +75,19 @@ func Register(router *gin.Engine) {
 		var json RegisterUserRequest
 
 		if c.Bind(&json) != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+			c.JSON(http.StatusBadRequest, Error(400, "Invalid request"))
 			return
 		}
 
 		user := entity.FindUser(json.Username)
 		if user != nil {
-			c.JSON(http.StatusConflict, gin.H{"error": "Username already exists"})
+			c.JSON(http.StatusConflict, Error(400, "Username already exists"))
 			return
 		}
 
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(json.Password), bcrypt.DefaultCost)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not register user"})
+			c.JSON(http.StatusInternalServerError, Error(400, "Could not register user"))
 			return
 		}
 
@@ -92,11 +97,11 @@ func Register(router *gin.Engine) {
 		}
 
 		if err := entity.CreateUser(json.Username, string(hashedPassword), role); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "User registered failed"})
+			c.JSON(http.StatusInternalServerError, Error(400, "User registered failed"))
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": "User registered successfully"})
+		c.JSON(http.StatusOK, Success("User registered successfully"))
 	}
 
 	router.POST("/register", handler)
@@ -118,26 +123,26 @@ func DeleteUser(router *gin.Engine) {
 
 		toDeletedUser := entity.FindUser(usernameToDelete)
 		if toDeletedUser == nil {
-			c.JSON(http.StatusConflict, gin.H{"error": "Username not found"})
+			c.JSON(http.StatusConflict, Error(400, "Username not found"))
 			return
 		}
 
 		user := entity.FindUser(currentUser.(string))
 		if user == nil {
-			c.JSON(http.StatusConflict, gin.H{"error": "Username not found"})
+			c.JSON(http.StatusConflict, Error(400, "Username not found"))
 			return
 		}
 
 		if user.Role != auth.UserRoleAdmin {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: Insufficient privileges"})
+			c.JSON(http.StatusForbidden, Error(400, "Forbidden: Insufficient privileges"))
 			return
 		}
 
 		if err := entity.DeleteUser(usernameToDelete); err != nil {
-			c.JSON(http.StatusConflict, gin.H{"error": "User delete failed"})
+			c.JSON(http.StatusConflict, Error(400, "User delete failed"))
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
+		c.JSON(http.StatusOK, Success("User deleted successfully"))
 	}
 
 	router.DELETE("/delete/:username", auth.AuthMiddleware(), auth.AdminMiddleware(), handler)

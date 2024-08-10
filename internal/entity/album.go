@@ -8,14 +8,14 @@ import (
 )
 
 type Album struct {
-	ID        uint `gorm:"primarykey"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	ID        uint           `gorm:"primarykey" json:"id"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 
-	Name   string  `gorm:"size:200;index;"`
-	Users  []User  `gorm:"many2many:users_albums;" yaml:"-"`
-	Photos []Photo `gorm:"many2many:photos_albums;" yaml:"-"`
+	Name   string  `gorm:"size:200;index;" json:"name"`
+	Users  []User  `gorm:"many2many:users_albums;" json:"-"`
+	Photos []Photo `gorm:"many2many:photos_albums;" json:"-"`
 }
 
 func (Album) TableName() string {

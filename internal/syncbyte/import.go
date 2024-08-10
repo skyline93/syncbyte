@@ -65,6 +65,8 @@ func ImportOriginalsFromWebDAV(userName string, conf *config.Config) error {
 	fileChan := make(chan FileInfoWrapper)
 	webDAVDir := filepath.Join(conf.StoragePath, "user", userName)
 
+	user := entity.FindUser(userName)
+
 	album, err := entity.GetDefaultAlbum(userName)
 	if err != nil {
 		return err
@@ -95,6 +97,8 @@ func ImportOriginalsFromWebDAV(userName string, conf *config.Config) error {
 				FileName: filepath.Base(uniqueFileName),
 				FileSize: fileInfo.Info.Size(),
 				FileType: contentType,
+				AlbumID:  album.ID,
+				UserID:   user.ID,
 			}
 
 			destPath := filepath.Join(originalsPath, photo.FileName)

@@ -13,13 +13,13 @@ func UploadFile(router *gin.RouterGroup, conf *config.Config) {
 	handler := func(c *gin.Context) {
 		username, exists := c.Get("username")
 		if !exists {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "User context not found"})
+			c.JSON(http.StatusInternalServerError, Error(400, "User context not found"))
 			return
 		}
 
 		file, err := c.FormFile("file")
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "No file is received"})
+			c.JSON(http.StatusBadRequest, Error(400, "No file is received"))
 			return
 		}
 
@@ -27,18 +27,18 @@ func UploadFile(router *gin.RouterGroup, conf *config.Config) {
 		if _, err := os.Stat(userDir); os.IsNotExist(err) {
 			err := os.MkdirAll(userDir, os.ModePerm)
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create user directory"})
+				c.JSON(http.StatusInternalServerError, Error(400, "Could not create user directory"))
 				return
 			}
 		}
 
 		filePath := filepath.Join(userDir, file.Filename)
 		if err := c.SaveUploadedFile(file, filePath); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not save file"})
+			c.JSON(http.StatusInternalServerError, Error(400, "Could not save file"))
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully"})
+		c.JSON(http.StatusOK, Error(400, "File uploaded successfully"))
 	}
 
 	router.POST("/upload", handler)

@@ -48,13 +48,15 @@ func registerRoutes(router *gin.Engine, conf *config.Config) {
 	api.UploadFile(APIv1, conf)
 	api.UploadPhoto(APIv1, conf)
 	api.ImportPhoto(APIv1, conf)
+	api.ListPhotos(APIv1, conf)
 
 	api.CreateAlbum(APIv1, conf)
-	api.GetAlbums(APIv1, conf)
+	api.ListAlbums(APIv1, conf)
 }
 
 func StartHttp(ctx context.Context, conf *config.Config) {
 	router := gin.Default()
+	router.Use(api.ErrorHandler())
 
 	APIv1 = router.Group(BaseUri, auth.AuthMiddleware())
 

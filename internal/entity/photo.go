@@ -1,27 +1,28 @@
 package entity
 
 import (
+	"fmt"
 	"time"
 
 	"gorm.io/gorm"
 )
 
 type Photo struct {
-	ID        uint `gorm:"primarykey"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	ID        uint           `gorm:"primarykey" json:"id"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 
-	Name       string `gorm:"size:200;index;"`
-	FileName   string `gorm:"size:300;index;"`
+	Name       string `gorm:"size:200;index;" json:"name"`
+	FileName   string `gorm:"size:300;index;" json:"file_name"`
 	FileHash   string `gorm:"size:128;index" json:"file_hash"`
 	FileSize   int64  `json:"file_size"`
 	FileType   string `gorm:"size:16" json:"file_type"`
-	IsImported bool   `gorm:"default:false"`
+	IsImported bool   `gorm:"default:false" json:"is_imported"`
 
-	UserID  uint
-	AlbumID uint
-	Albums  []Album `gorm:"many2many:photos_albums;" yaml:"-"`
+	UserID  uint    `json:"user_id"`
+	AlbumID uint    `json:"album_id"`
+	Albums  []Album `gorm:"many2many:photos_albums;" json:"-"`
 }
 
 func (Photo) TableName() string {
@@ -36,6 +37,8 @@ func (s *Photo) Create(albumID uint) (*Photo, error) {
 		FileSize:   s.FileSize,
 		FileType:   s.FileType,
 		IsImported: false,
+		AlbumID:    s.AlbumID,
+		UserID:     s.UserID,
 	}
 
 	if err := Db().Transaction(func(tx *gorm.DB) error {
@@ -78,4 +81,27 @@ func (s *Photo) SetIsImported(isImported bool) error {
 	}
 
 	return nil
+}
+
+func ListPhotos(userName string, albumID uint) ([]Photo, error) {
+	var user User
+
+	err := Db().Model(&User{}).Where("name = ?", userName).Preload("Albums").First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	for _, album := range user.Albums {
+		if album.ID == albumID {
+			var alb Album
+			err := Db().Model(&Album{}).Where("id = ?", albumID).Preload("Photos").First(&alb).Error
+			if err != nil {
+				return nil, err
+			}
+
+			return alb.Photos, nil
+		}
+	}
+
+	return nil, fmt.Errorf("album is not exists")
 }
