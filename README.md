@@ -11,7 +11,7 @@ export CGO_ENABLED='1'
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run serve
 ```
 
 ```bash

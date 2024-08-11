@@ -42,7 +42,7 @@ export default {
 
         console.log('Login successful');
         // 例如跳转到首页
-        this.$router.push('/photo');
+        this.$router.push('/');
       } catch (error) {
         console.error('Login failed:', error);
         this.errorMessage = 'Login failed. Please check your username and password.';
