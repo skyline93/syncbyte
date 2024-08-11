@@ -7,19 +7,8 @@ import (
 	"path/filepath"
 	"phto/internal/config"
 	"phto/internal/entity"
-	"phto/internal/log"
 	"sync"
-
-	"github.com/sirupsen/logrus"
 )
-
-var (
-	logger *logrus.Logger
-)
-
-func init() {
-	logger = log.NewLogger("syncbyte.log")
-}
 
 func ImportOriginals(userName string, conf *config.Config) error {
 	user := entity.FindUser(userName)

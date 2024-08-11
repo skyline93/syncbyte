@@ -12,6 +12,7 @@ import (
 	"phto/internal/auth"
 	"phto/internal/config"
 	"phto/internal/log"
+	"phto/internal/syncbyte"
 	"syscall"
 	"time"
 
@@ -112,6 +113,8 @@ func Start(conf *config.Config) {
 	logger.Info("start server")
 	go StartHttp(ctx, conf)
 
+	syncbyte.VipsInit()
+
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGUSR1)
 
@@ -119,6 +122,8 @@ func Start(conf *config.Config) {
 
 	logger.Info("shutting down...")
 	cancel()
+
+	syncbyte.VipsShutdown()
 
 	time.Sleep(2 * time.Second)
 
