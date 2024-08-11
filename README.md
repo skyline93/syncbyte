@@ -40,3 +40,9 @@ EOF
 ```bash
 ./syncbyte start --config config.json
 ```
+
+## frontend
+
+```bash
+vue create frontend
+```
