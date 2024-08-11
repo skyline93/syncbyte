@@ -1,29 +1,30 @@
 <template>
-    <div class="gallery">
-        <div class="header">
-            <h1>Welcome to the Home Page</h1>
-            <p v-if="username" class="user-info">{{ username }}</p>
-        </div>
+    <div>
+        <h1>Welcome, {{ username }}</h1>
         <div v-if="loading" class="loading">加载中...</div>
-        <div v-else>
-            <div v-for="(image, index) in images" :key="index" class="gallery-item">
-                <img :src="imageUrls[index]" :alt="image.file_name" class="responsive-image"/>
+        <div v-else class="gallery-container">
+            <div ref="lightGalleryRef" class="gallery">
+                <a v-for="(image, index) in images" :key="index" :href="imageUrls[index]" class="gallery-item">
+                    <img :src="imageUrls[index]" :alt="image.file_name" />
+                </a>
             </div>
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import axiosInstance from '../services/axiosInstance'; // 引入已配置的 axios 实例
+import lightGallery from 'lightgallery';
+import { ref, onMounted, nextTick } from 'vue';
+import axiosInstance from '../services/axiosInstance';
 
 const images = ref([]);
 const imageUrls = ref([]);
 const loading = ref(true);
 const username = ref('');
+const lightGalleryRef = ref(null);
 
 const fetchUser = async () => {
-    username.value = localStorage.getItem('username'); // 设置用户名
+    username.value = localStorage.getItem('username');
 };
 
 const fetchImages = async () => {
@@ -44,19 +45,19 @@ const fetchImages = async () => {
 const getFullImageUrl = (path) => {
     if (typeof path !== 'string') {
         console.error('Invalid path:', path);
-        return ''; // 返回空字符串或默认图片 URL
+        return '';
     }
 
     if (path.startsWith('http')) {
         return path; // 如果路径已经是完整的 URL，直接返回
     } else {
         try {
-            const trimmedPath = path.replace(/^\//, ''); // 去掉路径前的斜杠
-            const url = new URL(trimmedPath, 'http://localhost:8000'); // 替换为你的基础 URL
+            const trimmedPath = path.replace(/^\//, '');
+            const url = new URL(trimmedPath, 'http://localhost:8000');
             return url.href;
         } catch (error) {
             console.error('Invalid URL:', path, error);
-            return ''; // 返回空字符串或默认图片 URL
+            return '';
         }
     }
 };
@@ -67,59 +68,46 @@ const getImageBlob = async (url) => {
         return URL.createObjectURL(response.data);
     } catch (error) {
         console.error('Error fetching image:', error);
-        return ''; // 返回空字符串或默认图片 URL
+        return '';
     }
 };
 
-onMounted(() => {
+onMounted(async () => {
+    const lgThumbnail = await import('lightgallery/plugins/thumbnail/lg-thumbnail.es5.js');
+    const lgFullscreen = await import('lightgallery/plugins/fullscreen/lg-fullscreen.es5.js');
+
+    nextTick(() => {
+        lightGallery(lightGalleryRef.value, {
+            plugins: [lgThumbnail.default, lgFullscreen.default],
+            thumbnail: true,
+            fullscreen: true,
+        });
+    });
+
     fetchImages();
     fetchUser();
 });
 </script>
 
 <style scoped>
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.gallery-container {
     padding: 10px;
 }
 
-.user-info {
-    font-weight: bold;
-    font-size: 16px;
-    position: absolute;
-    top: 10px;
-    right: 10px;
-}
-
 .gallery {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 5px;
 }
 
 .gallery-item {
-    width: calc(33.33% - 10px);
-}
-
-.responsive-image {
     width: 100%;
-    height: auto;
+}
+
+.gallery-item img {
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    /* border-radius: 8px; */
-}
-
-@media (max-width: 768px) {
-  .gallery-item {
-    width: calc(50% - 10px); /* 调整宽度为适应小屏幕 */
-  }
-}
-
-@media (max-width: 480px) {
-  .gallery-item {
-    width: calc(100% - 10px); /* 单列布局 */
-  }
 }
 
 .loading {
