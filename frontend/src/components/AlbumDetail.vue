@@ -1,6 +1,26 @@
 <template>
-    <div>
-        <h1>Album Photos</h1>
+    <div class="album-details">
+        <div class="header">
+            <h1>Album Photos</h1>
+            <button class="upload-button" @click="openModal">上传图片</button>
+        </div>
+
+        <div v-if="isModalOpen" class="modal">
+            <div class="modal-content">
+                <span class="close" @click="closeModal">&times;</span>
+                <div class="modal-header">
+                    <h5>上传图片</h5>
+                </div>
+                <div class="modal-body">
+                    <input type="file" ref="fileInput" @change="handleFileChange" multiple />
+                </div>
+                <div class="modal-footer">
+                    <button @click="confirmUpload">确定</button>
+                    <button @click="closeModal">取消</button>
+                </div>
+            </div>
+        </div>
+
         <div v-if="loading" class="loading">加载中...</div>
         <div v-else class="gallery-container">
             <div ref="lightGalleryRef" class="gallery">
@@ -13,16 +33,18 @@
 </template>
 
 <script setup>
-import lightGallery from 'lightgallery';
 import { ref, onMounted, nextTick } from 'vue';
 import axiosInstance from '../services/axiosInstance';
 import { BASE_URL } from '../config';
 import { useRoute } from 'vue-router';
+import lightGallery from 'lightgallery';
 
 const images = ref([]);
 const imageUrls = ref([]);
 const loading = ref(true);
 const lightGalleryRef = ref(null);
+const isModalOpen = ref(false);
+const selectedFiles = ref([]);
 const route = useRoute();
 const albumId = route.params.id;
 
@@ -71,6 +93,44 @@ const getImageBlob = async (url) => {
     }
 };
 
+const openModal = () => {
+    isModalOpen.value = true;
+};
+
+const closeModal = () => {
+    isModalOpen.value = false;
+    selectedFiles.value = [];
+};
+
+const handleFileChange = (event) => {
+    selectedFiles.value = Array.from(event.target.files);
+};
+
+const confirmUpload = async () => {
+    if (selectedFiles.value.length === 0) {
+        alert('请选择至少一个文件');
+        return;
+    }
+
+    const formData = new FormData();
+    selectedFiles.value.forEach(file => {
+        formData.append('files[]', file);
+    });
+    formData.append('album_id', albumId);
+
+    try {
+        await axiosInstance.post('/api/v1/photo/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        fetchImages();
+        closeModal();
+    } catch (error) {
+        console.error('Error uploading images:', error);
+    }
+};
+
 onMounted(async () => {
     const lgThumbnail = await import('lightgallery/plugins/thumbnail/lg-thumbnail.es5.js');
     const lgFullscreen = await import('lightgallery/plugins/fullscreen/lg-fullscreen.es5.js');
@@ -87,18 +147,95 @@ onMounted(async () => {
 });
 </script>
 
+
 <style scoped>
-.back-button {
-    margin: 10px 0;
-    padding: 10px;
+.album-details {
+    position: relative;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.upload-button {
     background-color: #42b983;
     color: white;
     border: none;
+    padding: 10px 20px;
     border-radius: 5px;
     cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
-.back-button:hover {
+.upload-button:hover {
+    background-color: #369b72;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    font-size: 24px;
+    color: #333;
+}
+
+.close:hover {
+    color: #42b983;
+}
+
+.modal-header {
+    font-size: 1.5em;
+    margin-bottom: 15px;
+}
+
+.modal-body {
+    margin-bottom: 20px;
+}
+
+.modal-footer {
+    text-align: right;
+}
+
+.modal-footer button {
+    background-color: #42b983;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-left: 10px;
+}
+
+.modal-footer button:hover {
     background-color: #369b72;
 }
 

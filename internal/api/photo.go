@@ -61,42 +61,44 @@ func UploadPhoto(router *gin.RouterGroup, conf *config.Config) {
 			return
 		}
 
-		file, err := c.FormFile("file")
-		if err != nil {
-			c.JSON(http.StatusBadRequest, Error(400, "No file provided"))
+		files := c.Request.MultipartForm.File["files[]"]
+		if len(files) == 0 {
+			c.JSON(http.StatusBadRequest, Error(400, "No files provided"))
 			return
 		}
 
-		uniqueFileName := syncbyte.GenerateUniqueFilename(file.Filename)
+		for _, file := range files {
+			uniqueFileName := syncbyte.GenerateUniqueFilename(file.Filename)
 
-		photo := &entity.Photo{
-			Name:     filepath.Base(file.Filename),
-			FileName: filepath.Base(uniqueFileName),
-			FileSize: file.Size,
-			FileType: strings.Split(file.Header.Get("Content-Type"), ";")[0],
-			AlbumID:  album.ID,
-			UserID:   user.ID,
+			photo := &entity.Photo{
+				Name:     filepath.Base(file.Filename),
+				FileName: filepath.Base(uniqueFileName),
+				FileSize: file.Size,
+				FileType: strings.Split(file.Header.Get("Content-Type"), ";")[0],
+				AlbumID:  album.ID,
+				UserID:   user.ID,
+			}
+
+			src, err := file.Open()
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, Error(400, "open src file failed"))
+				return
+			}
+			defer src.Close()
+
+			if err := syncbyte.UploadPhoto(username.(string), album.Name, uniqueFileName, src, conf); err != nil {
+				c.JSON(http.StatusInternalServerError, Error(400, "Failed to save file"))
+				return
+			}
+
+			_, err = photo.Create(uint(albumID))
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, Error(400, "Failed to create photo"))
+				return
+			}
 		}
 
-		src, err := file.Open()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, Error(400, "open src file failed"))
-			return
-		}
-		defer src.Close()
-
-		if err := syncbyte.UploadPhoto(username.(string), album.Name, uniqueFileName, src, conf); err != nil {
-			c.JSON(http.StatusInternalServerError, Error(400, "Failed to save file"))
-			return
-		}
-
-		pho, err := photo.Create(uint(albumID))
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, Error(400, "Failed to create photo"))
-			return
-		}
-
-		c.JSON(http.StatusOK, Success(fmt.Sprintf("Photo %d create successfully", pho.ID)))
+		c.JSON(http.StatusOK, Success("Photos uploaded successfully"))
 	}
 
 	router.POST("/photo/upload", handler)
