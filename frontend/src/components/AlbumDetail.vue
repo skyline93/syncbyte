@@ -1,6 +1,5 @@
 <template>
     <div>
-        <button @click="goBack" class="back-button">Back to Albums</button>
         <h1>Album Photos</h1>
         <div v-if="loading" class="loading">加载中...</div>
         <div v-else class="gallery-container">
@@ -18,14 +17,13 @@ import lightGallery from 'lightgallery';
 import { ref, onMounted, nextTick } from 'vue';
 import axiosInstance from '../services/axiosInstance';
 import { BASE_URL } from '../config';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 
 const images = ref([]);
 const imageUrls = ref([]);
 const loading = ref(true);
 const lightGalleryRef = ref(null);
 const route = useRoute();
-const router = useRouter();
 const albumId = route.params.id;
 
 const fetchImages = async () => {
@@ -71,10 +69,6 @@ const getImageBlob = async (url) => {
         console.error('Error fetching image:', error);
         return '';
     }
-};
-
-const goBack = () => {
-    router.push({ name: 'AlbumList' });
 };
 
 onMounted(async () => {
