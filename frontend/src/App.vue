@@ -1,15 +1,13 @@
 <template>
-  <div class="container">
-    <!-- 左侧菜单栏 -->
-    <aside class="sidebar">
+  <div :class="{ 'container': !isLoginPage }">
+    <aside v-if="!isLoginPage" class="sidebar">
       <h2>Syncbyte</h2>
       <ul>
         <li @click="navigateTo('AlbumList')">相册</li>
-        <!-- 根据需要添加更多菜单项 -->
+        <li @click="navigateTo('LibraryPage')">库</li>
       </ul>
     </aside>
 
-    <!-- 动态内容显示区域 -->
     <div class="main-content">
       <router-view></router-view>
     </div>
@@ -17,11 +15,14 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
+import { computed } from 'vue';
 
 const router = useRouter();
+const route = useRoute();
 
-// 导航到不同的页面
+const isLoginPage = computed(() => route.name === 'LoginForm');
+
 const navigateTo = (routeName) => {
   router.push({ name: routeName });
 };

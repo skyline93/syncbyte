@@ -1,14 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import AlbumList from '../components/AlbumList.vue'; // 相册列表页面组件
-import AlbumDetail from '../components/AlbumDetail.vue'; // 相册详情页面组件
-// import Home from '../components/Home.vue'; // 主页组件
-// import About from '../components/About.vue'; // 关于我们页面组件
+import AlbumList from '../components/AlbumList.vue';
+import AlbumDetail from '../components/AlbumDetail.vue';
+import LoginForm from '../components/LoginForm.vue';
+import LibraryPage from '../components/LibraryPage.vue';
 
 const routes = [
-    // { path: '/', name: 'Home', component: Home },
+    { path: '/login', name: 'LoginForm', component: LoginForm },
     { path: '/albums', name: 'AlbumList', component: AlbumList },
     { path: '/albums/:id', name: 'AlbumDetail', component: AlbumDetail },
-    // { path: '/about', name: 'About', component: About },
+    { path: '/library', name: 'LibraryPage', component: LibraryPage },
 ];
 
 const router = createRouter({
