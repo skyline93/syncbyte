@@ -1,12 +1,18 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import AppHome from '../views/AppHome.vue';
 import LoginForm from '../components/LoginForm.vue';
+import PhotoGallery from '../components/PhotoGallery.vue';
 
 const routes = [
   { path: '/login', component: LoginForm },
   {
     path: '/',
     component: AppHome,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/photo',
+    component: PhotoGallery,
     meta: { requiresAuth: true }
   },
 ];

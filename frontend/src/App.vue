@@ -5,8 +5,13 @@
 </template>
 
 <script>
+// import PhotoGallery from './components/PhotoGallery.vue';
+
 export default {
-  name: 'App'
+  name: 'App',
+  // components: {
+  //   PhotoGallery
+  // }
 };
 </script>
 

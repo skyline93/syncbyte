@@ -37,6 +37,8 @@ export default {
 
         const token = response.data.data.token;
         localStorage.setItem('token', token);
+        localStorage.setItem('username', this.username);
+
         console.log('Login successful');
         // 例如跳转到首页
         this.$router.push('/');
