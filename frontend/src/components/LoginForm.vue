@@ -17,6 +17,7 @@
 
 <script>
 import axios from 'axios';
+import { BASE_URL } from '../config';
 
 export default {
   name: 'LoginForm',
@@ -30,7 +31,7 @@ export default {
   methods: {
     async handleLogin() {
       try {
-        const response = await axios.post('http://localhost:8000/login', {
+        const response = await axios.post(`${BASE_URL}/login`, {
           username: this.username,
           password: this.password
         });
@@ -41,7 +42,7 @@ export default {
 
         console.log('Login successful');
         // 例如跳转到首页
-        this.$router.push('/');
+        this.$router.push('/photo');
       } catch (error) {
         console.error('Login failed:', error);
         this.errorMessage = 'Login failed. Please check your username and password.';

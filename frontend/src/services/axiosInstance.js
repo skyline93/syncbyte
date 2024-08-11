@@ -1,9 +1,10 @@
 // src/services/axiosInstance.js
 import axios from 'axios';
+import { BASE_URL } from '../config';
 
 // 创建 axios 实例
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:8000', // 替换为你的基础 URL
+  baseURL: BASE_URL, // 替换为你的基础 URL
   timeout: 10000, // 可选: 设置请求超时（10秒）
 });
 

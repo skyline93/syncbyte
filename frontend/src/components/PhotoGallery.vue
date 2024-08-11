@@ -16,6 +16,7 @@
 import lightGallery from 'lightgallery';
 import { ref, onMounted, nextTick } from 'vue';
 import axiosInstance from '../services/axiosInstance';
+import { BASE_URL } from '../config';
 
 const images = ref([]);
 const imageUrls = ref([]);
@@ -53,7 +54,7 @@ const getFullImageUrl = (path) => {
     } else {
         try {
             const trimmedPath = path.replace(/^\//, '');
-            const url = new URL(trimmedPath, 'http://localhost:8000');
+            const url = new URL(trimmedPath, BASE_URL);
             return url.href;
         } catch (error) {
             console.error('Invalid URL:', path, error);
