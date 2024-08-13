@@ -24,9 +24,11 @@
         <div v-if="loading" class="loading">加载中...</div>
         <div v-else class="gallery-container">
             <div ref="lightGalleryRef" class="gallery">
-                <a v-for="(image, index) in images" :key="index" :href="imageUrls[index]" class="gallery-item">
-                    <img :src="imageUrls[index]" :alt="image.file_name" />
-                </a>
+                <LightGallery :speed="500" licenseKey="0000-0000-000-0000">
+                    <a v-for="(image, index) in images" :key="index" :href="imageUrls[index]" class="gallery-item">
+                        <img :src="imageUrls[index]" :alt="image.file_name" />
+                    </a>
+                </LightGallery>
             </div>
         </div>
     </div>
@@ -38,6 +40,8 @@ import axiosInstance from '../services/axiosInstance';
 import { BASE_URL } from '../config';
 import { useRoute } from 'vue-router';
 import lightGallery from 'lightgallery';
+import LightGallery from 'lightgallery/vue';
+import 'lightgallery/css/lightgallery.css';
 
 const images = ref([]);
 const imageUrls = ref([]);
@@ -149,15 +153,13 @@ onMounted(async () => {
 
 
 <style scoped>
-.album-details {
-    position: relative;
-}
-
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
+    padding: 0 10px;
+    box-sizing: border-box;
 }
 
 .upload-button {
@@ -168,6 +170,7 @@ onMounted(async () => {
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    margin-left: auto;
 }
 
 .upload-button:hover {
@@ -239,13 +242,18 @@ onMounted(async () => {
     background-color: #369b72;
 }
 
+.album-details {
+    position: relative;
+}
+
 .gallery-container {
     padding: 10px;
+    box-sizing: border-box;
 }
 
 .gallery {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: auto-fill;
     gap: 5px;
 }
 
@@ -254,8 +262,8 @@ onMounted(async () => {
 }
 
 .gallery-item img {
-    width: 100%;
-    height: 100%;
+    width: 15%;
+    height: 5%;
     object-fit: cover;
 }
 
